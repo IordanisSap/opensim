@@ -148,7 +148,7 @@ namespace ArenaModule
 
         private string[] startPointNames = new string[] { "StartPoint1", "StartPoint2" };
 
-        private const byte maxStartPoints = 2;
+        private const int maxStartPoints = 2;
         private List<StartPoint> avatarStartPoints;
 
         private int commChannel = -5;
@@ -329,15 +329,27 @@ namespace ArenaModule
             for (int i = 0; i < avatarStartPoints.Count; i++)
             {
                 m_log.WarnFormat("4");
+                int xxxx = avatarStartPoints[i].getAvatars().Count;
+                m_log.WarnFormat("5");
+                int yyy = m_ArenaModePlayerNum[currentMode];
+                m_log.WarnFormat("6");
+                int yy1y = m_ArenaModePlayerNum[currentMode] / maxStartPoints;
+                m_log.WarnFormat("7");
+                int abb = avatarStartPoints[i].getAvatars().Count < (m_ArenaModePlayerNum[currentMode] / maxStartPoints) ? 1 : 0;
+                m_log.WarnFormat("8");
 
                 if (avatarStartPoints[i].getAvatars().Count < (m_ArenaModePlayerNum[currentMode] / maxStartPoints))
                 {
+                                                        m_log.WarnFormat("9");
                     m_log.WarnFormat("Trying Start point {0}", avatarStartPoints[i].getName());
                     if (avatarStartPoints[i].getAvatars().IndexOf(playerUUID) != -1)
                     {
+                                                            m_log.WarnFormat("99");
+
                         m_log.WarnFormat("Player {0} is already registered", m_scene.GetScenePresence(playerUUID).Name);
                         return;
                     }
+                    m_log.WarnFormat("6");
                     m_log.WarnFormat("Trying to add to {0}", avatarStartPoints[i].getName());
                     avatarStartPoints[i].addAvatar(playerUUID);
                     m_log.WarnFormat("Added to {0}", avatarStartPoints[i].getName());
@@ -346,6 +358,7 @@ namespace ArenaModule
                 }
                 else
                 {
+                                    m_log.WarnFormat("9");
                     m_log.WarnFormat("Start point {0} is full", avatarStartPoints[i].getName());
                 }
             }
