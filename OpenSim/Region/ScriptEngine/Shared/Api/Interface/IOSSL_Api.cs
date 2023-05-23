@@ -373,7 +373,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
         void osNpcStand(LSL_Key npc);
         void osNpcRemove(key npc);
         void osNpcPlayAnimation(LSL_Key npc, string animation);
-        void osNpcStopAnimation(LSL_Key npc, string animation);
+        void osNpcStopAnimation(LSL_Key npc, string animation); 
         void osNpcTouch(LSL_Key npcLSL_Key, LSL_Key object_key, LSL_Integer link_num);
         void osNpcWhisper(key npc, int channel, string message);
 
@@ -598,5 +598,23 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Interfaces
         LSL_Integer osAvatarType(LSL_Key avkey);
         LSL_Integer osAvatarType(LSL_String sFirstName, LSL_String sLastName);
         void osListSortInPlace(LSL_List src, LSL_Integer stride, LSL_Integer ascending);
+
+                /// <summary>
+        /// Set the collision and appearance size of an avatar
+        /// </summary>
+        /// <param name="npc"></param>
+        /// <returns>TRUE on success.  FALSE otherwise.</returns>
+        LSL_Integer osSetSize(LSL_Key avatar, vector size);
+        void osAttachToNPC(LSL_Key npc, int attachmentPoint);
+
+        /// <summary>
+        ///  Set the animation (animation) that will play for the given animation state (anim_state) for the given NPC.
+        /// </summary>
+        /// <param name="npc"></param>
+        /// <param name="animState"></param>
+        /// <param name="animation"></param>
+        void osNpcSetAnimationOverride(LSL_Key npc, string animState, string anim);
+
+
     }
 }

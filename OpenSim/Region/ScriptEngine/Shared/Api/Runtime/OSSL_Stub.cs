@@ -1570,5 +1570,20 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         {
             m_OSSL_Functions.osListSortInPlace(src, stride, ascending);
         }
+
+        public LSL_Integer osSetSize(LSL_Key avatar, vector size)
+        {
+            return m_OSSL_Functions.osSetSize(avatar, size);
+        }
+
+        public void osAttachToNPC(LSL_Key npc, int attachmentPoint)
+        {
+            m_OSSL_Functions.osAttachToNPC(npc, attachmentPoint);
+        }
+
+        public void osNpcSetAnimationOverride(LSL_Key npc, string animState, string anim)
+        {
+            m_OSSL_Functions.osNpcSetAnimationOverride(npc, animState, anim);
+        }
     }
 }

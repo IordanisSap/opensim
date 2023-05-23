@@ -7224,6 +7224,21 @@ face0493-6022-3cf1-bdbe-1ae375f7f2da
    <map><key>npc</key><map><key>type</key><string>key</string></map></map>
   </array>
  </map>
+ <key>osSetSize</key>
+ <map>
+  <key>return</key><string>integer</string>
+  <key>arguments</key><array>
+   <map><key>agent</key><map><key>type</key><string>key</string></map></map>
+   <map><key>size</key><map><key>type</key><string>vector</string></map></map>
+  </array>
+ </map>
+ <key>osAttachToNPC</key>
+ <map>
+  <key>arguments</key><array>
+   <map><key>npc</key><map><key>type</key><string>key</string></map></map>
+   <map><key>attachmentPoint</key><map><key>type</key><string>integer</string></map></map>
+  </array>
+ </map>
  <key>osIsUUID</key>
  <map>
   <key>return</key><string>integer</string>
@@ -7460,6 +7475,14 @@ face0493-6022-3cf1-bdbe-1ae375f7f2da
   <key>arguments</key><array>
    <map><key>npc</key><map><key>type</key><string>key</string></map></map>
    <map><key>animation</key><map><key>type</key><string>string</string></map></map>
+  </array>
+ </map>
+  <key>osNpcSetAnimationOverride</key>
+ <map>
+  <key>arguments</key><array>
+   <map><key>npc</key><map><key>type</key><string>key</string></map></map>
+   <map><key>animState</key><map><key>type</key><string>string</string></map></map>
+   <map><key>anim</key><map><key>type</key><string>string</string></map></map>
   </array>
  </map>
  <key>osNpcRemove</key>

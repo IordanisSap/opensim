@@ -6128,5 +6128,115 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api
         {
             src.SortInPlace(stride, ascending == 1);
         }
+
+
+        
+        public LSL_Integer osSetSize(LSL_Key avatar, LSL_Vector size)
+        {
+            CheckThreatLevel(ThreatLevel.High, "osSetSize");
+
+            if (!UUID.TryParse(avatar, out UUID avatarID))
+                return 1;
+
+            ScenePresence target = World.GetScenePresence(avatarID);
+            if (target is null)
+                return 1;
+
+
+            target.SetSize(new Vector3((float)size.x, (float)size.y, (float)size.z), target.Appearance.AvatarFeetOffset);
+            target.Appearance.SetSize(new Vector3((float)size.x, (float)size.y, (float)size.z));
+            return 0;
+        }
+
+        public void osAttachToNPC(LSL_Key npc, int attachmentPoint)
+        {
+
+            CheckThreatLevel(ThreatLevel.High, "osAttachToNPC");
+            if (!UUID.TryParse(npc.m_string, out UUID npcId))
+                return;
+
+            if (!World.TryGetScenePresence(npcId, out ScenePresence target))
+                return;
+
+            SceneObjectGroup grp = m_host.ParentGroup;
+            if (grp == null || grp.IsDeleted || grp.IsAttachment)
+                return;
+
+            grp.SetOwner(target.UUID, target.ControllingClient.ActiveGroupId);
+            osForceAttachToAvatar(attachmentPoint);
+        }
+
+
+ private static readonly Dictionary<string, string> MovementAnimationsForLSL = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+        {
+            {"CROUCH", "Crouching"},
+            {"CROUCHWALK", "CrouchWalking"},
+            {"FALLDOWN", "Falling Down"},
+            {"FLY", "Flying"},
+            {"FLYSLOW", "FlyingSlow"},
+            {"HOVER", "Hovering"},
+            {"HOVER_UP", "Hovering Up"},
+            {"HOVER_DOWN", "Hovering Down"},
+            {"JUMP", "Jumping"},
+            {"LAND", "Landing"},
+            {"PREJUMP", "PreJumping"},
+            {"RUN", "Running"},
+            {"SIT","Sitting"},
+            {"SITGROUND","Sitting on Ground"},
+            {"STAND", "Standing"},
+            {"STANDUP", "Standing Up"},
+            {"STRIDE","Striding"},
+            {"SOFT_LAND", "Soft Landing"},
+            {"TURNLEFT", "Turning Left"},
+            {"TURNRIGHT", "Turning Right"},
+            {"WALK", "Walking"}
+        };
+
+        public void osNpcSetAnimationOverride(LSL_Key npc, string animState, string anim){
+            CheckThreatLevel(ThreatLevel.High, "osNpcSetAnimationOverride");
+            INPCModule module = World.RequestModuleInterface<INPCModule>();
+            if (module is null)
+                return;
+
+            if (!UUID.TryParse(npc.m_string, out UUID npcID))
+                return;
+
+            ScenePresence target = World.GetScenePresence(npcID);
+            if (target is null || !target.IsNPC)
+                return;
+
+            if (!module.CheckPermissions(npcID, m_host.OwnerID))
+                return;
+
+            if (!UUID.TryParse(anim, out UUID animID))
+            {
+                TaskInventoryItem item = m_host.Inventory.GetInventoryItem(anim);
+                if (item != null && item.Type == (int)AssetType.Animation)
+                    animID = item.AssetID;
+                else
+                    animID = UUID.Zero;
+            }
+
+            string state = String.Empty;
+
+            foreach (KeyValuePair<string, string> kvp in MovementAnimationsForLSL)
+            {
+                if (kvp.Value.ToLower() == ((string)animState).ToLower())
+                {
+                    state = kvp.Key;
+                    break;
+                }
+            }
+
+            if (state.Length == 0)
+            {
+                return;
+            }
+
+            target.SetAnimationOverride(state, animID);
+        }
+
+
+
     }
 }
