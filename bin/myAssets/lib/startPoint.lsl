@@ -35,7 +35,7 @@ default
     state_entry()
     {
         llSay(0,llGetObjectName() + "ArenaMod");
-        listen_handle = llListen(-5,llGetObjectName() + "ArenaMod", NULL_KEY, "");
+        listen_handle = llListen(-5,"ArenaMod", NULL_KEY, "");
     }
     listen( integer channel, string name, key id, string message )
     {

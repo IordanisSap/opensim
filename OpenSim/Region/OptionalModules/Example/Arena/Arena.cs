@@ -39,9 +39,6 @@ namespace ArenaModule
             {
                 this.self = sc;
                 this.scene = sc.ParentGroup.Scene;
-
-                self = null;
-                scene = null;
                 avatarUUIDs = new List<UUID>();
                 npcUUIDs = new List<UUID>();
 
@@ -309,47 +306,33 @@ namespace ArenaModule
                 m_log.WarnFormat("setPlayerReady can only be invoked after setup");
                 return;
             }
-            m_log.WarnFormat("1");
 
             if (started)
             {
                 m_log.WarnFormat("setPlayerReady can only be invoked before start");
                 return;
             }
-            m_log.WarnFormat("2");
 
             SceneObjectPart startObject = m_scene.GetSceneObjectPart(hostID);
             if (startObject.OwnerID != landOwnerUUID)
             {
                 m_log.WarnFormat("setPlayerReady can only be invoked by the land owner ({0} is not the land owner)", startObject.OwnerID);
             }
-            m_log.WarnFormat("3");
 
             m_log.WarnFormat("setPlayerReady invoked by {0}", m_scene.GetScenePresence(playerUUID).Name);
             for (int i = 0; i < avatarStartPoints.Count; i++)
             {
-                m_log.WarnFormat("4");
-                int xxxx = avatarStartPoints[i].getAvatars().Count;
-                m_log.WarnFormat("5");
-                int yyy = m_ArenaModePlayerNum[currentMode];
-                m_log.WarnFormat("6");
-                int yy1y = m_ArenaModePlayerNum[currentMode] / maxStartPoints;
-                m_log.WarnFormat("7");
-                int abb = avatarStartPoints[i].getAvatars().Count < (m_ArenaModePlayerNum[currentMode] / maxStartPoints) ? 1 : 0;
-                m_log.WarnFormat("8");
+
+                if (avatarStartPoints[i].getAvatars().IndexOf(playerUUID) != -1)
+                {
+                    m_log.WarnFormat("Player {0} is already registered", m_scene.GetScenePresence(playerUUID).Name);
+                    return;
+                }
 
                 if (avatarStartPoints[i].getAvatars().Count < (m_ArenaModePlayerNum[currentMode] / maxStartPoints))
                 {
-                                                        m_log.WarnFormat("9");
-                    m_log.WarnFormat("Trying Start point {0}", avatarStartPoints[i].getName());
-                    if (avatarStartPoints[i].getAvatars().IndexOf(playerUUID) != -1)
-                    {
-                                                            m_log.WarnFormat("99");
-
-                        m_log.WarnFormat("Player {0} is already registered", m_scene.GetScenePresence(playerUUID).Name);
-                        return;
-                    }
-                    m_log.WarnFormat("6");
+                    m_log.WarnFormat("Trying Start point {0}, Count={1}", avatarStartPoints[i].getName(), avatarStartPoints[i].getAvatars().Count);
+                    avatarStartPoints[i].printAvatars();
                     m_log.WarnFormat("Trying to add to {0}", avatarStartPoints[i].getName());
                     avatarStartPoints[i].addAvatar(playerUUID);
                     m_log.WarnFormat("Added to {0}", avatarStartPoints[i].getName());
@@ -358,7 +341,6 @@ namespace ArenaModule
                 }
                 else
                 {
-                                    m_log.WarnFormat("9");
                     m_log.WarnFormat("Start point {0} is full", avatarStartPoints[i].getName());
                 }
             }
@@ -367,13 +349,22 @@ namespace ArenaModule
 
         public void setNPC(UUID hostID, UUID scriptID, UUID npcID)
         {
+            m_log.WarnFormat("1");
             UUID owner = m_scene.GetSceneObjectPart(hostID).OwnerID;
+            m_log.WarnFormat("2");
+
             foreach (StartPoint startPoint in avatarStartPoints)
             {
+                m_log.WarnFormat("3");
+
                 if (startPoint.getUUID().Equals(hostID))
                 {
+                    m_log.WarnFormat("4");
+
                     startPoint.addNPC(npcID);
                 }
+                m_log.WarnFormat("5");
+
             }
         }
 
@@ -402,6 +393,7 @@ namespace ArenaModule
                 return 1;
             }
             started = true;
+            string globalMsg = "";
             foreach (StartPoint startPoint in avatarStartPoints)
             {
                 startPoint.start();
@@ -409,12 +401,14 @@ namespace ArenaModule
                 foreach (UUID avatar in startPoint.getAvatars())
                 {
                     msg += avatar.ToString() + "+";
+                    globalMsg += avatar.ToString() + "+";
                 }
                 m_log.WarnFormat("Sending message to {0} with {1}", startPoint.getName(), msg);
                 msg = msg.Substring(0, msg.Length - 1);
-                m_worldComm.DeliverMessageTo(startPoint.getUUID(), commChannel, new Vector3(0, 0, 0), startPoint.getName() + "ArenaMod", UUID.Zero, msg);
+                m_worldComm.DeliverMessageTo(startPoint.getUUID(),commChannel, new Vector3(0,0,0), "ArenaMod", UUID.Zero, msg );
                 m_log.WarnFormat("Sent message with name {0}", startPoint.getName() + "ArenaMod");
             }
+         m_worldComm.DeliverMessage(ChatTypeEnum.Region, commChannel, "ArenaMod", UUID.Zero, globalMsg);
             return 0;
         }
 

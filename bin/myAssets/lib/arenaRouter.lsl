@@ -60,6 +60,12 @@ default
     timer()
     {
         AI();
+        if (objectExists(_enemy) == 0 || objectExists(_self) == 0){
+            llOwnerSay("Error: Enemy or Self does not exist");
+            llSetScriptState(llGetScriptName(),FALSE);
+            llSleep(0.2);
+            llResetScript();
+        }
     }
     on_rez(integer start_param)
     {
@@ -67,6 +73,11 @@ default
     }
 }
 
+
+integer objectExists(key uuid){
+    if (llKey2Name(uuid)== "") {return 0;}
+    return 1;
+}
 
 vector getEnemyPos(){
     return llList2Vector(llGetObjectDetails(_enemy, [OBJECT_POS]), 0);
