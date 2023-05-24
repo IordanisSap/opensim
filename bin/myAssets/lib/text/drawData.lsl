@@ -47,6 +47,7 @@ default
     {
         draw_init();
         //listen_handle = llListen(getArenaCommChannel(), "", "", "");
+
     }
     listen(integer channel, string name, key id, string message)
     {
@@ -56,6 +57,10 @@ default
         llOwnerSay("Drawing: " + teamName1 + " vs " + teamName2);
         llOwnerSay("Message: " + message);
         draw(teamName1, teamName2);
+    }
+    timer()
+    {
+        draw_init();
     }
 }
 
@@ -93,17 +98,16 @@ draw(string name1,string name2)
 draw_init(){
     string CommandList = ""; // Storage; for our drawing commands
     string text = "Setting up...";
-    CommandList = osSetFontName(CommandList, FontName);
-    CommandList = osSetFontSize(CommandList, FontSize1);
+    integer BigFont = 45;
 
-    CommandList = osSetPenColor(CommandList, "00000000");
-    CommandList = osDrawFilledRectangle( CommandList, 512, 256 ); // 200 pixels by 100 pixels
+    CommandList = osSetFontName(CommandList, FontName);
+    CommandList = osSetFontSize(CommandList, BigFont);
     CommandList = osSetPenColor(CommandList, "FFAAAAAA");
 
-    CommandList = osSetFontSize(CommandList, FontSize1);
-    CommandList = osMovePen( CommandList, calculateHorizontalOffset(text, FontName, FontSize1), calculateVerticalOffset("vs", FontName, FontSize1) );           // Upper left corner at <10,10>
+    CommandList = osSetFontSize(CommandList, BigFont);
+    CommandList = osMovePen( CommandList, calculateHorizontalOffset(text, FontName, BigFont), calculateVerticalOffset("vs", FontName, BigFont) );           // Upper left corner at <10,10>
     CommandList = osDrawText( CommandList, text ); // Place some text
-    osSetDynamicTextureDataFace("", "vector", CommandList, "width:512,height:256", 0, 4 );
+    osSetDynamicTextureDataFace("", "vector", CommandList, "width:512,height:256,bgColor:000000FF,setalpha:0", 0, 4 );
     //osSetDynamicTextureDataBlendFace("", "vector", CommandList, "width:512,height:256,Alpha:0", TRUE, 2, 0, 255, 4);
 
 }
