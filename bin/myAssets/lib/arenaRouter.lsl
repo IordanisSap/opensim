@@ -55,12 +55,13 @@ default
             llOwnerSay("Error: Could not find all objects");
             return;
         }
+        llRegionSayTo(_controller, _channel, "Ready");
         llSetTimerEvent(0.4);
     }
     timer()
     {
         AI();
-        if (objectExists(_enemy) == 0 || objectExists(_self) == 0){
+        if (objectExists(_enemy) == FALSE || objectExists(_self) == FALSE){
             llOwnerSay("Error: Enemy or Self does not exist");
             llSetScriptState(llGetScriptName(),FALSE);
             llSleep(0.2);

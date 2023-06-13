@@ -18,7 +18,7 @@ setup_anim()
 spawn(string name){
     
     vector v = llRot2Fwd( llGetLocalRot() );
-    npcKey = osNpcCreate(name, "'s drone", llGetPos() + v * 25 + <0,0,2>, llGetInventoryKey("npc"));
+    npcKey = osNpcCreate(name, "drone", llGetPos() + v * 25 + <0,0,2>, llGetInventoryKey("npc"));
     osSetSize(npcKey, <3.5,3.1,0.8>);
     setup_anim();
     osSetSpeed(npcKey, 1);

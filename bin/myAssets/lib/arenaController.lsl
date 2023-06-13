@@ -1,6 +1,7 @@
 integer npcCount = 0;
 integer listen_handle = 0;
 integer modeMaxNPCs = 0;
+list ReadyNPCs = [];
 list NPCs = [];
 list NPCguns = [];
 
@@ -38,18 +39,50 @@ state setup
                 NPCs += llList2Key(command,1);
                 NPCguns += llList2Key(command,2);
                 osNpcTouch(llList2Key(command,1), llList2Key(command,2), LINK_THIS);
-
+                
                 llRegionSayTo(id, getArenaCommChannel(), "ok");
                 if (npcCount >= modeMaxNPCs)
                 {
                     llOwnerSay("Setup complete");
                     llListenRemove(listen_handle);
-                    state main;
+                    state wait;
                 }
             }
-
         }
         else llOwnerSay("Unknown command");
+    }
+    changed(integer change)
+    {
+        if (change & CHANGED_REGION_START) 
+        {
+            llOwnerSay("Region changed");
+            llListenRemove(listen_handle);
+            llResetScript();
+        }
+    }
+}
+
+state wait
+{
+    state_entry()
+    {
+        llOwnerSay("Wait");
+        llRegionSay(getArenaCommChannel() + 1, llList2Key(NPCs,0) + "+"+ llList2Key(NPCs,1));
+        listen_handle = llListen(getArenaCommChannel(), "Router", "", "");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if (llListFindList(ReadyNPCs, [id]) == -1)
+        {
+            ReadyNPCs += [id];
+            llOwnerSay("NPC ready");
+            if (llGetListLength(ReadyNPCs) >= modeMaxNPCs)
+            {
+                llOwnerSay("All NPCs ready");
+                llListenRemove(listen_handle);
+                state main;
+            }
+        }
     }
     changed(integer change)
     {
@@ -74,6 +107,10 @@ state main
         list command = llParseStringKeepNulls(message, "+", "-");
         integer length = llGetListLength(command);
         key npc = getPlayerNPC(llGetOwnerKey(id));
+        if (!llGetAgentSize(npc)) {
+            llRegionSay(getArenaCommChannel() + 1, llKey2Name(getOtherIndex(npc)) + " wins");
+            state setup;
+        }
         if (llList2String(command,0)  == "Move")
         {
             vector targetPos = (vector) llList2String(command,1);
@@ -104,7 +141,6 @@ state main
     }
 }
 
-
 default
 {
     state_entry()
@@ -123,4 +159,10 @@ integer getIndex(key npc)
     }
     llOwnerSay("returning -1" );
     return -1;
+}
+
+key getOtherIndex(key npc)
+{
+    if (llList2Key(NPCs,0) == npc) return llList2Key(NPCs,1);
+    return llList2Key(NPCs,0);
 }

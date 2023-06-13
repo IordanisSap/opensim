@@ -1,6 +1,6 @@
 string ImageUrl = "http://opensimulator.org/skins/osmonobook/images/headerLogo.png";
 string FontName = "Courier New";
-integer FontSize1 = 30;
+integer FontSize1 = 25;
 integer FontSize2 = 20;
 integer listen_handle;
 
@@ -45,10 +45,11 @@ default
     state_entry()
     {
         draw_init();
-        listen_handle = llListen(getArenaCommChannel(), "", "", "");
+        listen_handle = llListen(getArenaCommChannel() + 1, "", "", "");
     }
     listen(integer channel, string name, key id, string message)
     {
+        llOwnerSay(message);
         list names = llParseStringKeepNulls(message, "+", "");
         string teamName1 = llKey2Name(llList2String(names, 0));
         string teamName2 = llKey2Name(llList2String(names, 1));
@@ -58,18 +59,35 @@ default
     }
 }
 
+state listening
+{
+    state_entry()
+    {
+        listen_handle = llListen(getArenaCommChannel() + 1, "", "", "");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        llOwnerSay(message);
+        list names = llParseStringKeepNulls(message, "+", "");
+        string text = llList2String(names, 0);
+        llOwnerSay("Message: " + text);
+        draw_won(text);
+    }
+}
+
 draw(string name1,string name2)
 {
     name1 = llToUpper(name1);
     name2 = llToUpper(name2);
+    llOwnerSay("Drawing: " + name1 + " vs " + name2);
     
     string CommandList = ""; // Storage for our drawing commands
     CommandList = osSetFontName(CommandList, FontName);
     CommandList = osSetFontSize(CommandList, FontSize1);
 
-    CommandList = osSetPenColor(CommandList, "FF0000FF");
+    CommandList = osSetPenColor(CommandList, "FF000000");
     CommandList = osDrawFilledRectangle( CommandList, 512, 256 ); // 200 pixels by 100 pixels
-    CommandList = osSetPenColor(CommandList, "FFAAAAAA");
+    CommandList = osSetPenColor(CommandList, "FFFFFFFF");
 
 
     CommandList = osMovePen( CommandList, calculateHorizontalOffset(name1,FontName,FontSize1), 25 );  // Upper left corner at <10,10>
@@ -79,28 +97,50 @@ draw(string name1,string name2)
     CommandList = osSetPenColor(CommandList, "FFBC544B");
     CommandList = osMovePen( CommandList, calculateHorizontalOffset("vs", FontName, FontSize2), calculateVerticalOffset("vs", FontName, FontSize2) );           // Upper left corner at <10,10>
     CommandList = osDrawText( CommandList, "vs" ); // Place some text
-    CommandList = osSetPenColor(CommandList, "FFAAAAAA");
+    CommandList = osSetPenColor(CommandList, "FFFFFFFF");
      
     CommandList = osSetFontSize(CommandList, FontSize1);
     CommandList = osMovePen( CommandList, calculateHorizontalOffset(name2,FontName,FontSize1), 256-68 );           // Upper left corner at <10,10>
     CommandList = osDrawText( CommandList, name2 ); // Place some textaw
 
     // Now draw the image
-    osSetDynamicTextureData("", "vector", CommandList, "width:512,height:256", 0 );
+    osSetDynamicTextureDataFace("", "vector", CommandList, "width:512,height:256", 0,1 );
+    state listening;
+}
+
+draw_won(string text)
+{
+
+    string CommandList = ""; // Storage for our drawing commands
+    CommandList = osSetFontName(CommandList, FontName);
+    CommandList = osSetFontSize(CommandList, FontSize2);
+
+    CommandList = osSetPenColor(CommandList, "FF000000");
+    CommandList = osDrawFilledRectangle( CommandList, 512, 256 ); // 200 pixels by 100 pixels
+
+
+    CommandList = osSetPenColor(CommandList, "FFBC544B");
+    CommandList = osMovePen( CommandList, calculateHorizontalOffset(text, FontName, FontSize2), calculateVerticalOffset(text, FontName, FontSize2) );           // Upper left corner at <10,10>
+    CommandList = osDrawText( CommandList, text ); // Place some text
+     
+    // Now draw the image
+    osSetDynamicTextureDataFace("", "vector", CommandList, "width:512,height:256", 0,1 );
+    state listening;
 }
 
 draw_init(){
     string CommandList = ""; // Storage; for our drawing commands
-    string text = "Setting up...";
+    string text = "Waiting for players...";
     CommandList = osSetFontName(CommandList, FontName);
-    CommandList = osSetFontSize(CommandList, FontSize1);
+    CommandList = osSetFontSize(CommandList, FontSize2+5);
 
-    CommandList = osSetPenColor(CommandList, "FF0000FF");
+    
+
+    CommandList = osSetPenColor(CommandList, "FF000000");
     CommandList = osDrawFilledRectangle( CommandList, 512, 256 ); // 200 pixels by 100 pixels
     CommandList = osSetPenColor(CommandList, "FFAAAAAA");
 
-    CommandList = osSetFontSize(CommandList, FontSize1);
-    CommandList = osMovePen( CommandList, calculateHorizontalOffset(text, FontName, FontSize1), calculateVerticalOffset("vs", FontName, FontSize1) );           // Upper left corner at <10,10>
+    CommandList = osMovePen( CommandList, calculateHorizontalOffset(text, FontName, FontSize2+5), calculateVerticalOffset("vs", FontName, FontSize2+5) );           // Upper left corner at <10,10>
     CommandList = osDrawText( CommandList, text ); // Place some text
-    osSetDynamicTextureData("", "vector", CommandList, "width:512,height:256", 0 );
+    osSetDynamicTextureDataFace("", "vector", CommandList, "width:512,height:256", 0,1 );
 }
