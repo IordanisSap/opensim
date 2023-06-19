@@ -5,6 +5,18 @@ list ReadyNPCs = [];
 list NPCs = [];
 list NPCguns = [];
 
+integer cleanedUp = FALSE;
+string displayText = "Waiting for players...";
+
+
+init(){
+    npcCount = 0;
+    listen_handle = 0;
+    ReadyNPCs = [];
+    NPCs = [];
+    NPCguns = [];
+    string displayText = "Waiting for players...";
+}
 
 integer isAlreadyRegistered(key npc)
 {
@@ -17,16 +29,40 @@ integer isAlreadyRegistered(key npc)
     return FALSE;
 }
 
+
+cleanUp()
+{
+    integer i = 0;
+    integer size = llGetListLength(NPCs);
+    while (i < size)
+    {
+        if (llGetAgentSize(llList2Key(NPCs,i))) osNpcRemove(llList2Key(NPCs,i));
+        llOwnerSay("NPC removed");
+        llOwnerSay(llList2Key(NPCs,i));
+        i++;
+    }
+}
+
 state setup
 {
     state_entry()
     {
+        llRegionSay(getArenaCommChannel() + 1, displayText);
         llOwnerSay("Setup");
         modeMaxNPCs = getModePlayerNum();
         listen_handle = llListen(getArenaCommChannel(), "", "", "");
     }
     listen(integer channel, string name, key id, string message)
     {
+        list command = llParseStringKeepNulls(message, "+", "");
+        if(llList2String(command,0) != "SetupGun"){ return;}
+        if (cleanedUp == FALSE)
+        {
+            cleanUp();
+            cleanedUp = TRUE;
+            init();
+        }
+
         list command = llParseStringKeepNulls(message, "+", "");
         integer length = llGetListLength(command);
         if (llList2String(command,0)  == "SetupGun")
@@ -108,7 +144,9 @@ state main
         integer length = llGetListLength(command);
         key npc = getPlayerNPC(llGetOwnerKey(id));
         if (!llGetAgentSize(npc)) {
-            llRegionSay(getArenaCommChannel() + 1, llKey2Name(getOtherIndex(npc)) + " wins");
+            displayText = llKey2Name(getOtherIndex(npc)) + " wins";
+            reset();
+            cleanedUp = FALSE;
             state setup;
         }
         if (llList2String(command,0)  == "Move")

@@ -44,38 +44,25 @@ default
 {
     state_entry()
     {
+        llOwnerSay("default");
         draw_init();
         listen_handle = llListen(getArenaCommChannel() + 1, "", "", "");
     }
     listen(integer channel, string name, key id, string message)
     {
         llOwnerSay(message);
-        list names = llParseStringKeepNulls(message, "+", "");
-        string teamName1 = llKey2Name(llList2String(names, 0));
-        string teamName2 = llKey2Name(llList2String(names, 1));
-        llOwnerSay("Drawing: " + teamName1 + " vs " + teamName2);
-        llOwnerSay("Message: " + message);
-        draw(teamName1, teamName2);
+        draw_msg(message);
     }
 }
 
-state listening
-{
-    state_entry()
-    {
-        listen_handle = llListen(getArenaCommChannel() + 1, "", "", "");
-    }
-    listen(integer channel, string name, key id, string message)
-    {
-        llOwnerSay(message);
-        list names = llParseStringKeepNulls(message, "+", "");
-        string text = llList2String(names, 0);
-        llOwnerSay("Message: " + text);
-        draw_won(text);
-    }
+draw_msg(string message){
+    list names = llParseStringKeepNulls(message, "+", "");
+    integer size = llGetListLength(names);
+    if (size == 1) draw_single(message);
+    else draw_multiple(llKey2Name(llList2String(names, 0)), llKey2Name(llList2String(names, 1)));
 }
 
-draw(string name1,string name2)
+draw_multiple(string name1,string name2)
 {
     name1 = llToUpper(name1);
     name2 = llToUpper(name2);
@@ -105,12 +92,12 @@ draw(string name1,string name2)
 
     // Now draw the image
     osSetDynamicTextureDataFace("", "vector", CommandList, "width:512,height:256", 0,1 );
-    state listening;
 }
 
-draw_won(string text)
+draw_single(string textt)
 {
 
+    string text = llToUpper(textt);
     string CommandList = ""; // Storage for our drawing commands
     CommandList = osSetFontName(CommandList, FontName);
     CommandList = osSetFontSize(CommandList, FontSize2);
@@ -125,7 +112,6 @@ draw_won(string text)
      
     // Now draw the image
     osSetDynamicTextureDataFace("", "vector", CommandList, "width:512,height:256", 0,1 );
-    state listening;
 }
 
 draw_init(){

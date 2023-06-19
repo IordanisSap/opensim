@@ -76,8 +76,8 @@ default
 
 
 integer objectExists(key uuid){
-    if (llKey2Name(uuid)== "") {return 0;}
-    return 1;
+    if (!llGetAgentSize(uuid)) {return FALSE;}
+    return TRUE;
 }
 
 vector getEnemyPos(){
