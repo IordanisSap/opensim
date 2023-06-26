@@ -405,10 +405,10 @@ namespace ArenaModule
                 }
                 m_log.WarnFormat("Sending message to {0} with {1}", startPoint.getName(), msg);
                 msg = msg.Substring(0, msg.Length - 1);
-                m_worldComm.DeliverMessageTo(startPoint.getUUID(),commChannel, new Vector3(0,0,0), "ArenaMod", UUID.Zero, msg );
+                m_worldComm.DeliverMessageTo(startPoint.getUUID(), commChannel, new Vector3(0, 0, 0), "ArenaMod", UUID.Zero, msg);
                 m_log.WarnFormat("Sent message with name {0}", startPoint.getName() + "ArenaMod");
             }
-         m_worldComm.DeliverMessage(ChatTypeEnum.Region, commChannel, "ArenaMod", UUID.Zero, globalMsg);
+            m_worldComm.DeliverMessage(ChatTypeEnum.Region, commChannel, "ArenaMod", UUID.Zero, globalMsg);
             return 0;
         }
 
@@ -449,9 +449,11 @@ namespace ArenaModule
             return 0;
         }
 
-        public UUID getControllableObject(UUID hostID, UUID scriptID)
+        public UUID getControllableObject(UUID hostID, UUID scriptID, UUID npcID)
         {
-            UUID owner = m_scene.GetSceneObjectPart(hostID).OwnerID;
+            UUID owner;
+            if (UUID.Zero.Equals(npcID)) owner = m_scene.GetSceneObjectPart(hostID).OwnerID;
+            else owner = npcID;
             foreach (StartPoint startPoint in avatarStartPoints)
             {
                 for (int i = 0; i < startPoint.getAvatars().Count; i++)
@@ -465,9 +467,11 @@ namespace ArenaModule
             return UUID.Zero;
         }
 
-        public UUID getEnemy(UUID hostID, UUID scriptID)
+        public UUID getEnemy(UUID hostID, UUID scriptID, UUID npcID)
         {
-            UUID owner = m_scene.GetSceneObjectPart(hostID).OwnerID;
+            UUID owner;
+            if (UUID.Zero.Equals(npcID)) owner = m_scene.GetSceneObjectPart(hostID).OwnerID;
+            else owner = npcID;
             foreach (StartPoint startPoint in avatarStartPoints)
             {
                 bool flag = false;
@@ -482,6 +486,7 @@ namespace ArenaModule
             }
             return UUID.Zero;
         }
+
         public UUID commandCharacter(UUID hostID, UUID scriptID, string command)
         {
             UUID owner = m_scene.GetSceneObjectPart(hostID).OwnerID;

@@ -47,8 +47,8 @@ default
 {
     state_entry()
     {
-        _self =  getControllableObject();
-        _enemy = getEnemy();
+        _self =  getControllableObject(NULL_KEY);
+        _enemy = getEnemy(NULL_KEY);
         _controller = getController();
         _channel = getArenaCommChannel();
         if (_self == NULL_KEY || _enemy == NULL_KEY || _controller == NULL_KEY || _channel == -1){

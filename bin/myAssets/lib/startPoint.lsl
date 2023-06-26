@@ -53,11 +53,6 @@ default
         }
 
     }
-    touch()
-    {
-        //if (canSetNPC()) spawn("test");
-        spawn("test");
-    }
 
     timer()
     {
