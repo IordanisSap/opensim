@@ -22,6 +22,10 @@ default
     {
         move_decay();
     }
+    on_rez(integer start_param)
+    {
+        llResetScript();
+    }
 }
 
 
