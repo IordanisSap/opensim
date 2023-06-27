@@ -256,7 +256,8 @@ namespace MazeModule
                 SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
                 TaskInventoryItem item = controller.Inventory.GetInventoryItem("Ball");
                 SceneObjectPart startPointObj = m_scene.GetSceneObjectPart(startPoint);
-                m_scene.RezObject(controller,item,startPointObj.AbsolutePosition, null, Vector3.Zero,0, false, false);
+                List<SceneObjectGroup> newBall = m_scene.RezObject(controller,item,startPointObj.AbsolutePosition, null, Vector3.Zero,0, false, false);
+                newBall[0].ResumeScripts();
                 
             }
             catch (Exception e)
