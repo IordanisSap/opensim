@@ -46,6 +46,9 @@ namespace MazeModule
         private string mazeControllerName = "MazeController";
         private UUID mazeControllerID = UUID.Zero;
 
+        private UUID[,] mazeObjUUIDs = null;
+
+        private UUID mazeBallUUID = UUID.Zero;
         public bool isOwner(UUID avatarID)
         {
             return avatarID == landOwnerUUID;
@@ -106,6 +109,8 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "getStartPoint");
                 m_comms.RegisterScriptInvocation(this, "getEndPoint");
                 m_comms.RegisterScriptInvocation(this, "generateTestCube");
+                m_comms.RegisterScriptInvocation(this, "resetMaze");
+
 
                 // Register some constants as well
                 // m_comms.RegisterConstant("ModConstantInt1", 25);
@@ -136,14 +141,14 @@ namespace MazeModule
             Console.WriteLine("Generating:\n");
             maze.printMaze();
             int[,] binaryMaze = new BinaryMaze2D(maze.getCells()).getCells();
-            UUID[,] UUIDs = new UUID[size * 2 + 1, size * 2 + 1];
+            mazeObjUUIDs = new UUID[size * 2 + 1, size * 2 + 1];
             for (int y = 0; y < size * 2 + 1; y++)
             {
                 for (int x = 0; x < size * 2 + 1; x++)
                 {
                     if (binaryMaze[x, y] == 0)
                     {
-                        UUIDs[x, y] = generateCube(hostID, scriptID, pos + new Vector3(2 * x, 2 * y, 0));
+                        mazeObjUUIDs[x, y] = generateCube(hostID, scriptID, pos + new Vector3(2 * x, 2 * y, 0));
                     }
                 }
             }
@@ -152,14 +157,14 @@ namespace MazeModule
             {
                 if (binaryMaze[x, 0] == 0)
                 {
-                    startPoint = UUIDs[x, 0];
+                    startPoint = mazeObjUUIDs[x, 0];
                 }
             }
             for (int x = 0; x < size * 2 + 1; x++)
             {
                 if (binaryMaze[x, size * 2] == 0)
                 {
-                    endPoint = UUIDs[x, size * 2];
+                    endPoint = mazeObjUUIDs[x, size * 2];
                 }
             }
             LoadEndPointObject(endPoint);
@@ -250,19 +255,48 @@ namespace MazeModule
             }
         }
 
-        private void createBall(UUID startPoint){
+        private void createBall(UUID startPoint)
+        {
             try
             {
                 SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
                 TaskInventoryItem item = controller.Inventory.GetInventoryItem("Ball");
                 SceneObjectPart startPointObj = m_scene.GetSceneObjectPart(startPoint);
-                List<SceneObjectGroup> newBall = m_scene.RezObject(controller,item,startPointObj.AbsolutePosition, null, Vector3.Zero,0, false, false);
+                List<SceneObjectGroup> newBall = m_scene.RezObject(controller, item, startPointObj.AbsolutePosition, null, Vector3.Zero, 0, false, false);
+                mazeBallUUID = newBall[0].UUID;
                 newBall[0].ResumeScripts();
-                
+
             }
             catch (Exception e)
             {
                 m_log.WarnFormat("[MazeMod] Error loading ball: " + e.Message);
+            }
+        }
+
+        private void deleteMaze()
+        {
+            try
+            {
+                m_log.WarnFormat("[MazeMod] Deleting maze2");
+                if (mazeObjUUIDs == null) return;
+                m_log.WarnFormat("[MazeMod] Deleting maze");
+                for (int y = 0; y < mazeObjUUIDs.GetLength(1); y++)
+                {
+                    for (int x = 0; x < mazeObjUUIDs.GetLength(0); x++)
+                    {
+                        if (mazeObjUUIDs[x, y] != null)
+                        {
+                            SceneObjectGroup obj = m_scene.GetSceneObjectGroup(mazeObjUUIDs[x, y]);
+                            if (obj != null) m_scene.DeleteSceneObject(obj, false);
+                        }
+                    }
+                }
+                SceneObjectGroup ball = m_scene.GetSceneObjectGroup(mazeBallUUID);
+                if (ball != null) m_scene.DeleteSceneObject(ball, false);
+            }
+            catch (Exception e)
+            {
+                m_log.WarnFormat("[MazeMod] Error deleting maze: " + e.Message);
             }
         }
 
@@ -271,9 +305,9 @@ namespace MazeModule
             return commChannel;
         }
 
-        public void reset(UUID hostID, UUID scriptID)
+        public void resetMaze(UUID hostID, UUID scriptID)
         {
-
+            deleteMaze();
         }
 
         public void generateMaze3D(UUID hostID, UUID scriptID, int size)
