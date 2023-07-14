@@ -1,19 +1,25 @@
 float Velocity = 12.0; //meters / second.
 integer listen_handle;
+list powerups = ["Shield_powerup"];
+integer powerup_duration = 8;
+float current_powerup_timestamp = 0;
 
 #include "ball/parsing.lsl"
 #include "ball/physics.lsl"
-
+#include "ball/texture_animations.lsl"
 default
 {
     state_entry()
     {
         llSleep(1.0);
+        reset_texture();
 
         listen_handle = llListen(0, "", "", "");
 
         llSetTimerEvent(MOVE_DECAY_FREQ);
-    }
+
+        llCollisionFilter("Test_Cube","",TRUE);
+        }
     listen( integer channel, string name, key id, string message )
     {
         parse_message(message);
@@ -25,6 +31,10 @@ default
     on_rez(integer start_param)
     {
         llResetScript();
+    }
+    collision_start(integer num_detected)
+    {
+        string name = llDetectedName(0);
     }
 }
 
@@ -48,7 +58,7 @@ translate_command(list command)
 }
 
 move(float x, float y, float z){
-    vector adjVel = <x,y,z> * llGetMass();
+    vector adjVel = <x,y,z> * llGetMass()/2;
     llSetVelocity(adjVel, FALSE);
 }
 
