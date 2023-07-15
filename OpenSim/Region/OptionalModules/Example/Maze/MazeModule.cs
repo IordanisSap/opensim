@@ -82,7 +82,7 @@ namespace MazeModule
             powerUpManager.AddPowerUp(
                 new PowerUp(
                     "Shield",
-                    8000,
+                    15000,
                     delegate (Player player)
                     {
                         Console.WriteLine("Shield activated");
@@ -152,6 +152,7 @@ namespace MazeModule
                     "Spikes1",
                     delegate (Player player)
                     {
+                        if (player.hasPowerUp("Shield")){return;}
                         SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
                         SceneObjectGroup sc = m_scene.GetSceneObjectGroup(player.getUUID());
                         sc.TeleportObject(sc.UUID, start.AbsolutePosition, Quaternion.Identity, 1);
@@ -213,6 +214,9 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "obstacleCollision");
                 m_comms.RegisterScriptInvocation(this, "floorCollision");
                 m_comms.RegisterScriptInvocation(this, "powerUpCollision");
+                m_comms.RegisterScriptInvocation(this, "endPointCollision");
+
+                
 
                 // Register some constants as well
                 // m_comms.RegisterConstant("ModConstantInt1", 25);
@@ -509,6 +513,8 @@ namespace MazeModule
         public void obstacleCollision(UUID hostID, UUID scriptID, UUID player)
         {
             m_log.WarnFormat("[MazeMod] Ball collided with obstacle");
+            Player p = getPlayer(player);
+            if (p == null) return;
             obstacleManager.OnCollision(hostID, getPlayer(player));
         }
 
@@ -545,22 +551,24 @@ namespace MazeModule
             playerObj.TeleportObject(player, startPointObj.AbsolutePosition, Quaternion.Identity, 1);
         }
 
-        // public endPointCollision(UUID hostID, UUID scriptID, UUID player)
-        // {
-        //     m_log.WarnFormat("[MazeMod] Ball collided with endpoint");
-        //     Player p = getPlayer(player);
-        //     if (p == null) return;
-        //     p.setFinished(true);
-        //     if (players.FindAll(obj => obj.getFinished()).Count == players.Count)
-        //     {
-        //         m_log.WarnFormat("[MazeMod] All players finished");
-        //         deleteMaze();
-        //         m_log.WarnFormat("[MazeMod] Maze deleted");
-        //         m_log.WarnFormat("[MazeMod] Generating new maze");
-        //         generateMaze(hostID, scriptID, mazeSize);
-        //         m_log.WarnFormat("[MazeMod] Maze generated");
-        //     }
-        // }
+        public int endPointCollision(UUID hostID, UUID scriptID, UUID player)
+        {
+            m_log.WarnFormat("[MazeMod] Ball collided with endpoint");
+            Player p = getPlayer(player);
+            if (p == null) return 0;
+            SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
+            playerObj.ScriptSetPhantomStatus(true);
+            playerObj.ScriptSetPhysicsStatus(false);
+            Primitive.TextureEntry texture = playerObj.RootPart.Shape.Textures;
+            Primitive.TextureEntryFace face = texture.CreateFace(0);
+            face.Glow = 0.3f;
+            face.RGBA = new Color4(0, 0.5f, 1f, 0.3f);
+            texture.FaceTextures[0] = face;
+            playerObj.TeleportObject(player,playerObj.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
+            playerObj.RootPart.UpdateTextureEntry(texture);
+            return 1;
+
+        }
 
         public int getArenaCommChannel(UUID hostID, UUID scriptID)
         {

@@ -41,13 +41,33 @@ public class Player
         return name;
     }
 
+    public bool hasPowerUp(string name)
+    {
+        foreach (PowerUp powerUp in powerUps)
+        {
+            if (powerUp.Name == name)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     public void AddPowerUp(PowerUp powerUp)
     {
         powerUps.Add(powerUp);
+        powerUp.Activate(this);
     }
 
-    public void OnCollision(Obstacle obstacle)
+    public void RemovePowerUp(string powerUp)
     {
-        obstacle.OnCollision(this);
+        foreach (PowerUp p in powerUps)
+        {
+            if (p.Name == powerUp)
+            {
+                powerUps.Remove(p);
+                p.Deactivate(this);
+                return;
+            }
+        }
     }
 }

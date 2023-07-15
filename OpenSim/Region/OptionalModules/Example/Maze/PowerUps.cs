@@ -30,6 +30,7 @@ public class PowerUp
     public string Name { get; set; }
 
     public int Duration { get; set; }
+
     public PowerUp(string name, int duration, Callback onActivate, Callback onDeactivate)
     {
         this.Name = name;
@@ -52,6 +53,20 @@ public class PowerUp
         {
             DeactivateCallback(player);
         }
+    }
+    public override bool Equals(object obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
+        {
+            return false;
+        }
+
+        PowerUp other = (PowerUp)obj;
+        return this.Name == other.Name;
+    }
+    public override int GetHashCode()
+    {
+        return Name.GetHashCode();
     }
 }
 
@@ -93,13 +108,13 @@ public class PowerUpManager
     {
         if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return;
         PowerUp powerUp = actionMap[powerUpName];
-        powerUp.Activate(player);
+        player.AddPowerUp(powerUp);
     }
     public void DeactivatePowerUp(UUID powerUpUUID, Player player)
     {
         if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return;
         PowerUp powerUp = actionMap[powerUpName];
-        powerUp.Deactivate(player);
+        player.RemovePowerUp(powerUp.Name);
     }
 
     public PowerUp getPowerUp(UUID powerUpUUID)

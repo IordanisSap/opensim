@@ -18,8 +18,8 @@ default
 
         llSetTimerEvent(MOVE_DECAY_FREQ);
 
-        llCollisionFilter("Test_Cube","",TRUE);
-        }
+        llCollisionFilter("", NULL_KEY, FALSE);
+    }
     listen( integer channel, string name, key id, string message )
     {
         parse_message(message);
