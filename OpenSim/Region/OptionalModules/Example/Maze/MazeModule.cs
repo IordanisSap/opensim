@@ -142,7 +142,21 @@ namespace MazeModule
                     }
                 )
             );
-
+            powerUpManager.AddPowerUp(
+                                new PowerUp(
+                    "Questionmark",
+                    15000,
+                    delegate (Player player)
+                    {
+                        SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
+                        playerObj.TeleportObject(player.getUUID(), playerObj.AbsolutePosition + new Vector3(0, 0, 5), Quaternion.Identity, 1);
+                    },
+                    delegate (Player player)
+                    {
+                        
+                    }
+                )
+            );
         }
 
         private void initObstacles()
@@ -156,6 +170,15 @@ namespace MazeModule
                         SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
                         SceneObjectGroup sc = m_scene.GetSceneObjectGroup(player.getUUID());
                         sc.TeleportObject(sc.UUID, start.AbsolutePosition, Quaternion.Identity, 1);
+                    }
+                )
+            );
+            obstacleManager.AddObstacle(
+                new Obstacle(
+                    "Rotating1",
+                    delegate (Player player)
+                    {
+                        
                     }
                 )
             );
@@ -522,6 +545,7 @@ namespace MazeModule
         {
             m_log.WarnFormat("[MazeMod] Ball collided with powerup");
             Player p = getPlayer(player);
+            if (p == null) return;
             string timerId = p.getUUID().ToString() + hostID.ToString();
             powerUpManager.ActivatePowerUp(hostID, p);
             if (timerDictionary.ContainsKey(timerId))

@@ -3,8 +3,8 @@ default
 {
     state_entry()
     {
-        generateMaze2D(6);
-        llSleep(90);
+        generateMaze2D(11);
+        llSleep(80);
         resetMaze();
     }
 }
