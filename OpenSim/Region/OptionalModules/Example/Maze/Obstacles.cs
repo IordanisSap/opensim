@@ -41,14 +41,14 @@ public class Obstacle
 }
 
 
-public class ObstacleManager
+public class ObstacleModule
 {
     private Dictionary<UUID, string> objectMap;
     private Dictionary<string, Obstacle> actionMap;
 
     private Random random = new Random();
 
-    public ObstacleManager()
+    public ObstacleModule()
     {
         objectMap = new Dictionary<UUID, string>();
         actionMap = new Dictionary<string, Obstacle>();

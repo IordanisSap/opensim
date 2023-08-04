@@ -199,3 +199,111 @@ public class BinaryMaze2D
         return _cells;
     }
 }
+
+public class MazeSolver
+{
+    int[,] maze;
+
+    bool[,] visited;
+
+    int[] start;
+
+    int[] end;
+
+    private Random _random = new Random();
+
+    private List<int[]> _path = new List<int[]>();
+
+    public MazeSolver(int[,] maze)
+    {
+        start = new int[2];
+        end = new int[2];
+        this.maze = maze;
+        visited = new bool[maze.GetLength(0), maze.GetLength(1)];
+
+        for (int x = 0; x < maze.GetLength(0); x++)
+        {
+            if (maze[x, 0] == 0)
+            {
+                start = new int[] { x, 0};
+            }
+        }
+        for (int x = 0; x < maze.GetLength(0); x++)
+        {
+            if (maze[x, maze.GetLength(1) - 1] == 0)
+            {
+                end = new int[] { x, maze.GetLength(1) - 1 };
+            }
+        }
+        Console.WriteLine("Start: " + start[0] + ", " + start[1]);
+        Console.WriteLine("End: " + end[0] + ", " + end[1]);
+    }
+    public void Solve()
+    {
+        SolvePath(start[0], start[1]);
+        _path.Reverse();
+    }
+
+    private bool SolvePath(int x, int y)
+    {
+        bool flag = false;
+        visited[x, y] = true;
+        if(maze[x,y] == 1) return false;
+        if(x == end[0] && y == end[1] || x == start[0] && y == start[1])
+        {
+            flag = true;
+        }
+        List<int[]> neighbors = GetUnvisitedNeighbors(x, y);
+        while (neighbors.Count > 0)
+        {
+            int[] neighbor = neighbors[_random.Next(neighbors.Count)];
+            neighbors.Remove(neighbor);
+
+            int nx = neighbor[0];
+            int ny = neighbor[1];
+
+            if (!visited[nx, ny])
+            {
+                if(SolvePath(nx, ny)) flag = true;
+            }
+        }
+        if (flag) _path.Add(new int[] { x, y });
+        return flag;
+    }
+
+    private List<int[]> GetUnvisitedNeighbors(int x, int y)
+    {
+        List<int[]> neighbors = new List<int[]>();
+        if (x > 0 && !visited[x - 1, y])
+        {
+            neighbors.Add(new int[] { x - 1, y });
+        }
+        if (x < maze.GetLength(0) - 1 && !visited[x + 1, y])
+        {
+            neighbors.Add(new int[] { x + 1, y });
+        }
+        if (y > 0 && !visited[x, y - 1])
+        {
+            neighbors.Add(new int[] { x, y - 1 });
+        }
+        if (y < maze.GetLength(1) - 1 && !visited[x, y + 1])
+        {
+            neighbors.Add(new int[] { x, y + 1 });
+        }
+        return neighbors;
+    }
+
+    public void printPath()
+    {
+        foreach(int[] i in _path)
+        {
+            Console.WriteLine(i[0] + ", " + i[1]);
+        }
+    }
+
+    public List<int[]> getPath()
+    {
+        if (_path.Count == 0) Solve();
+        return _path;
+    }
+}

@@ -61,9 +61,9 @@ namespace MazeModule
 
         private Dictionary<string, Timer> timerDictionary = new Dictionary<string, Timer>();
 
-        private PowerUpManager powerUpManager = new PowerUpManager();
+        private PowerUpModule PowerUpModule = new PowerUpModule();
 
-        private ObstacleManager obstacleManager = new ObstacleManager();
+        private ObstacleModule ObstacleModule = new ObstacleModule();
         private UUID mazeBallUUID = UUID.Zero;
         public bool isOwner(UUID avatarID)
         {
@@ -79,7 +79,7 @@ namespace MazeModule
 
         private void initPowerUps()
         {
-            powerUpManager.AddPowerUp(
+            PowerUpModule.AddPowerUp(
                 new PowerUp(
                     "Shield",
                     15000,
@@ -89,7 +89,7 @@ namespace MazeModule
                         TaskInventoryItem textureItem = m_scene.GetSceneObjectPart(getController()).Inventory.GetInventoryItem("Shield_texture");
                         Primitive.TextureEntry texture = new Primitive.TextureEntry(textureItem.AssetID);
                         Primitive.TextureEntryFace face = texture.CreateFace(0);
-                        face.Glow = 0.3f;
+                        face.Glow = 0.2f;
                         face.RGBA = new Color4(0, 0.5f, 1f, 1f);
                         face.Fullbright = true;
                         SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
@@ -113,8 +113,8 @@ namespace MazeModule
                     {
                         Primitive.TextureEntry texture = new Primitive.TextureEntry(UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f"));
                         Primitive.TextureEntryFace face = texture.CreateFace(0);
-                        face.Glow = 0.03f;
-                        face.RGBA = new Color4(0, 0.5f, 1f, 1f);
+                        face.Glow = 0.04f;
+                        face.RGBA = new Color4(0, 0.455f, 0.906f, 1f);
                         face.Fullbright = true;
                         SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
                         if (playerObj == null)
@@ -142,7 +142,7 @@ namespace MazeModule
                     }
                 )
             );
-            powerUpManager.AddPowerUp(
+            PowerUpModule.AddPowerUp(
                                 new PowerUp(
                     "Questionmark",
                     15000,
@@ -153,7 +153,7 @@ namespace MazeModule
                     },
                     delegate (Player player)
                     {
-                        
+
                     }
                 )
             );
@@ -161,24 +161,14 @@ namespace MazeModule
 
         private void initObstacles()
         {
-            obstacleManager.AddObstacle(
+            ObstacleModule.AddObstacle(
                 new Obstacle(
                     "Spikes1",
                     delegate (Player player)
                     {
-                        if (player.hasPowerUp("Shield")){return;}
+                        if (player.hasPowerUp("Shield")) { return; }
                         SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
-                        SceneObjectGroup sc = m_scene.GetSceneObjectGroup(player.getUUID());
-                        sc.TeleportObject(sc.UUID, start.AbsolutePosition, Quaternion.Identity, 1);
-                    }
-                )
-            );
-            obstacleManager.AddObstacle(
-                new Obstacle(
-                    "Rotating1",
-                    delegate (Player player)
-                    {
-                        
+                        teleportToStart(player.getUUID());
                     }
                 )
             );
@@ -239,7 +229,7 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "powerUpCollision");
                 m_comms.RegisterScriptInvocation(this, "endPointCollision");
 
-                
+
 
                 // Register some constants as well
                 // m_comms.RegisterConstant("ModConstantInt1", 25);
@@ -253,10 +243,11 @@ namespace MazeModule
             get { return null; }
         }
 
-        private void teleportToStart(UUID avatarID, Vector3 pos)
+        private void teleportToStart(UUID player)
         {
-            ScenePresence avatar = m_scene.GetScenePresence(avatarID);
-            avatar.Teleport(pos);
+            SceneObjectPart start = m_scene.GetSceneObjectPart(startPoint);
+            SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
+            playerObj.TeleportObject(playerObj.UUID, start.AbsolutePosition, Quaternion.Identity, 1);
         }
 
         #endregion
@@ -282,6 +273,8 @@ namespace MazeModule
         private void generatePath(in Maze2D maze, int size)
         {
             int[,] binaryMaze = new BinaryMaze2D(maze.getCells()).getCells();
+            MazeSolver solver = new MazeSolver(binaryMaze);
+            solver.Solve();
             mazeObjUUIDs = new UUID[size * 2 + 1, size * 2 + 1];
             UUID hostID = getController();
             Vector3 pos = m_scene.GetSceneObjectPart(hostID).AbsolutePosition;
@@ -326,9 +319,10 @@ namespace MazeModule
                 OpenMetaverse.UUID owner = obj.OwnerID;
                 SceneObjectPart part = new SceneObjectPart(hostID, PrimitiveBaseShape.CreateBox(), pos, Quaternion.Identity, Vector3.Zero);
                 // Get the texture entry of the cube
-                TaskInventoryItem textureItem = m_scene.GetSceneObjectPart(getController()).Inventory.GetInventoryItem("Path_texture");
-                Primitive.TextureEntry texture = new Primitive.TextureEntry(textureItem.AssetID);
+                // TaskInventoryItem textureItem = m_scene.GetSceneObjectPart(getController()).Inventory.GetInventoryItem("Path_texture");
+                Primitive.TextureEntry texture = new Primitive.TextureEntry(UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f"));
                 Primitive.TextureEntryFace face = texture.CreateFace(0);
+                face.RGBA = new Color4(0.8f, 0.467f, 0.134f, 1f);
                 part.Shape.Textures.FaceTextures[0] = face;
 
                 SceneObjectGroup group = new SceneObjectGroup(part);
@@ -389,6 +383,7 @@ namespace MazeModule
                 SceneObjectPart targetObject = m_scene.GetSceneObjectPart(objectUUID);
                 targetObject.ScriptAccessPin = 123;
                 m_scene.RezScriptFromPrim(item.ItemID, srcObject, objectUUID, 123, 1, 0);
+
             }
             catch (Exception e)
             {
@@ -421,7 +416,7 @@ namespace MazeModule
         {
             try
             {
-                //obstacleManager.AddAction("Spikes1", )
+                //ObstacleModule.AddAction("Spikes1", )
                 mazeObstacleUUIDs = new UUID[map.GetLength(0), map.GetLength(1)];
                 for (int y = 2; y < map.GetLength(1) - 1; y++)
                 {
@@ -431,14 +426,14 @@ namespace MazeModule
                         {
                             if (mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 20) != 0) continue;
                             SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
-                            Obstacle randomObstacle = obstacleManager.GetRandomObstacle();
+                            Obstacle randomObstacle = ObstacleModule.GetRandomObstacle();
                             m_log.WarnFormat("[MazeMod] Creating obstacle: " + randomObstacle.Name);
                             TaskInventoryItem obstacleInvItem = controller.Inventory.GetInventoryItem(randomObstacle.Name);
                             SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(map[x, y]);
                             List<SceneObjectGroup> newObstacle = m_scene.RezObject(controller, obstacleInvItem, spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z * 1.15f), null, Vector3.Zero, 0, false, false);
                             mazeObstacleUUIDs[x, y] = newObstacle[0].UUID;
                             newObstacle[0].ResumeScripts();
-                            obstacleManager.AddObject(newObstacle[0].UUID, randomObstacle.Name);
+                            ObstacleModule.AddObject(newObstacle[0].UUID, randomObstacle.Name);
                         }
                     }
                 }
@@ -463,7 +458,7 @@ namespace MazeModule
                             if (mazePowerupsUUIDs[x - 1, y] != UUID.Zero || mazePowerupsUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 20) != 0) continue;
                             SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
 
-                            PowerUp randomPowerUp = powerUpManager.GetRandomPowerUp();
+                            PowerUp randomPowerUp = PowerUpModule.GetRandomPowerUp();
                             TaskInventoryItem powerup = controller.Inventory.GetInventoryItem(randomPowerUp.Name);
                             SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(map[x, y]);
                             SceneObjectPart obstaclePoint = m_scene.GetSceneObjectPart(obstacles[x, y]);
@@ -472,7 +467,7 @@ namespace MazeModule
                             List<SceneObjectGroup> newPowerup = m_scene.RezObject(controller, powerup, spawnPos, null, Vector3.Zero, 0, false, false);
                             mazePowerupsUUIDs[x, y] = newPowerup[0].UUID;
                             newPowerup[0].ResumeScripts();
-                            powerUpManager.AddObject(newPowerup[0].UUID, randomPowerUp.Name);
+                            PowerUpModule.AddObject(newPowerup[0].UUID, randomPowerUp.Name);
                         }
                     }
                 }
@@ -538,7 +533,7 @@ namespace MazeModule
             m_log.WarnFormat("[MazeMod] Ball collided with obstacle");
             Player p = getPlayer(player);
             if (p == null) return;
-            obstacleManager.OnCollision(hostID, getPlayer(player));
+            ObstacleModule.OnCollision(hostID, getPlayer(player));
         }
 
         public void powerUpCollision(UUID hostID, UUID scriptID, UUID player)
@@ -547,7 +542,7 @@ namespace MazeModule
             Player p = getPlayer(player);
             if (p == null) return;
             string timerId = p.getUUID().ToString() + hostID.ToString();
-            powerUpManager.ActivatePowerUp(hostID, p);
+            PowerUpModule.ActivatePowerUp(hostID, p);
             if (timerDictionary.ContainsKey(timerId))
             {
                 Timer timerToRemove = timerDictionary[timerId];
@@ -556,23 +551,21 @@ namespace MazeModule
             }
             Timer timer = new Timer((object state) =>
             {
-                Console.WriteLine("timerrr"); powerUpManager.DeactivatePowerUp(hostID, p);
+                Console.WriteLine("timerrr"); PowerUpModule.DeactivatePowerUp(hostID, p);
                 if (timerDictionary.ContainsKey(timerId))
                 {
                     Timer timerToRemove = timerDictionary[timerId];
                     timerToRemove.Dispose();
                     timerDictionary.Remove(timerId);
                 }
-            }, null, powerUpManager.getPowerUp(hostID).Duration, Timeout.Infinite);
+            }, null, PowerUpModule.getPowerUp(hostID).Duration, Timeout.Infinite);
             timerDictionary.Add(timerId, timer);
         }
 
         public void floorCollision(UUID hostID, UUID scriptID, UUID player)
         {
             m_log.WarnFormat("[MazeMod] Ball collided with obstacle");
-            SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
-            SceneObjectPart startPointObj = m_scene.GetSceneObjectPart(startPoint);
-            playerObj.TeleportObject(player, startPointObj.AbsolutePosition, Quaternion.Identity, 1);
+            teleportToStart(player);
         }
 
         public int endPointCollision(UUID hostID, UUID scriptID, UUID player)
@@ -588,7 +581,7 @@ namespace MazeModule
             face.Glow = 0.3f;
             face.RGBA = new Color4(0, 0.5f, 1f, 0.3f);
             texture.FaceTextures[0] = face;
-            playerObj.TeleportObject(player,playerObj.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
+            playerObj.TeleportObject(player, playerObj.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
             playerObj.RootPart.UpdateTextureEntry(texture);
             return 1;
 

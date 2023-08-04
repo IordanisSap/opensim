@@ -72,14 +72,14 @@ public class PowerUp
 
 
 
-public class PowerUpManager
+public class PowerUpModule
 {
     private Dictionary<UUID, string> objectMap;
     private Dictionary<string, PowerUp> actionMap;
 
     private Random random = new Random();
 
-    public PowerUpManager()
+    public PowerUpModule()
     {
         objectMap = new Dictionary<UUID, string>();
         actionMap = new Dictionary<string, PowerUp>();

@@ -16,7 +16,7 @@ default
 
         listen_handle = llListen(0, "", "", "");
 
-        llSetTimerEvent(MOVE_DECAY_FREQ);
+        //llSetTimerEvent(MOVE_DECAY_FREQ);
 
         llCollisionFilter("", NULL_KEY, FALSE);
     }
@@ -26,7 +26,7 @@ default
     }
     timer()
     {
-        move_decay();
+        //move_decay();
     }
     on_rez(integer start_param)
     {
@@ -52,13 +52,21 @@ parse_message(string input){
 
 translate_command(list command)
 {
-    if (llList2String(command,0) == "move"){
-        move(llList2Float(command,1), llList2Float(command,2), llList2Float(command,3));
+    if (llList2String(command,0) == "moveRight"){
+        move(llList2Integer(command,1), 0, 0);
+    }
+    else if (llList2String(command,0) == "moveLeft"){
+        move(-llList2Integer(command,1), 0, 0);
+    }
+    else if (llList2String(command,0) == "moveBack"){
+        move(0, -llList2Integer(command,1), 0);
+    }
+    else if (llList2String(command,0) == "moveForward"){
+        move(0, llList2Integer(command,1), 0);
     }
 }
 
 move(float x, float y, float z){
-    vector adjVel = <x,y,z> * llGetMass()/2;
-    llSetVelocity(adjVel, FALSE);
+    llMoveToTarget(llGetPos()+<x,y,z>,2);
 }
 
