@@ -16,3 +16,4 @@ default
         resetMaze();
     }
 }
+

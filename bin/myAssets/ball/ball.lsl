@@ -16,7 +16,7 @@ default
 
         listen_handle = llListen(0, "", "", "");
 
-        //llSetTimerEvent(MOVE_DECAY_FREQ);
+        llSetTimerEvent(MOVE_DECAY_FREQ);
 
         llCollisionFilter("", NULL_KEY, FALSE);
     }
@@ -26,7 +26,7 @@ default
     }
     timer()
     {
-        //move_decay();
+        move_decay();
     }
     on_rez(integer start_param)
     {
@@ -35,6 +35,10 @@ default
     collision_start(integer num_detected)
     {
         string name = llDetectedName(0);
+    }
+    moving_end()
+    {
+        //llSetTimerEvent(move_time);
     }
 }
 
@@ -66,7 +70,7 @@ translate_command(list command)
     }
 }
 
-move(float x, float y, float z){
-    llMoveToTarget(llGetPos()+<x,y,z>,2);
+move(integer x, integer y, integer z){
+    llMoveToTarget(llGetPos()+<2*x,2*y,-10>,llAbs(x+y+z)*1);
 }
 

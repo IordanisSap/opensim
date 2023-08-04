@@ -248,6 +248,7 @@ namespace MazeModule
             SceneObjectPart start = m_scene.GetSceneObjectPart(startPoint);
             SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
             playerObj.TeleportObject(playerObj.UUID, start.AbsolutePosition, Quaternion.Identity, 1);
+            playerObj.RootPart.ParentGroup.MoveToTarget(start.AbsolutePosition, 0.5f);
         }
 
         #endregion
