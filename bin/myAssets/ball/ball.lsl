@@ -3,6 +3,7 @@ integer listen_handle;
 list powerups = ["Shield_powerup"];
 integer powerup_duration = 8;
 float current_powerup_timestamp = 0;
+vector target = ZERO_VECTOR;
 
 #include "ball/parsing.lsl"
 #include "ball/physics.lsl"
@@ -26,7 +27,7 @@ default
     }
     timer()
     {
-        move_decay();
+        move_decay(target);
     }
     on_rez(integer start_param)
     {
@@ -38,6 +39,7 @@ default
     }
     moving_end()
     {
+        //target = llGetPos();
         //llSetTimerEvent(move_time);
     }
 }
@@ -71,6 +73,7 @@ translate_command(list command)
 }
 
 move(integer x, integer y, integer z){
+    target = llGetPos()+<2*x,2*y,-10>;
     llMoveToTarget(llGetPos()+<2*x,2*y,-10>,llAbs(x+y+z)*1);
 }
 
