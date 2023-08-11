@@ -28,19 +28,21 @@ default
     timer()
     {
         move_decay(target);
+        list powerUps = getPowerUps(llGetKey());
+        integer listLength = llGetListLength(powerUps);
+        for (integer i = 0; i < listLength; i++)
+        {
+            // Get each string from the list
+            string currentString = llList2String(powerUps, i);
+
+            // Print the current string
+            llOwnerSay(currentString);
+        }
+
     }
     on_rez(integer start_param)
     {
         llResetScript();
-    }
-    collision_start(integer num_detected)
-    {
-        string name = llDetectedName(0);
-    }
-    moving_end()
-    {
-        //target = llGetPos();
-        //llSetTimerEvent(move_time);
     }
 }
 
@@ -70,10 +72,23 @@ translate_command(list command)
     else if (llList2String(command,0) == "moveForward"){
         move(0, llList2Integer(command,1), 0);
     }
+    else if (llList2String(command,0) == "consumePowerup"){
+        powerup(command);
+    }
 }
 
 move(integer x, integer y, integer z){
     target = llGetPos()+<2*x,2*y,-10>;
+    movePlayer(<x,y,z>);
+    llApplyImpulse(<2*x,2*y,-10> * llGetMass(), FALSE);
     llMoveToTarget(llGetPos()+<2*x,2*y,-10>,llAbs(x+y+z)*1);
+}
+
+powerup(list commands){
+    list args = llDeleteSubList(commands, 0, 1);
+    llOwnerSay("Given args to powerup: "+ llList2String(args,0));
+    llOwnerSay("Given args to powerup: "+ llList2String(args,1));
+
+    consumePowerUp(llList2String(commands,1), args);
 }
 

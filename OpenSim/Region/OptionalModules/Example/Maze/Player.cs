@@ -24,11 +24,17 @@ public class Player
     private UUID uuid;
     private string name;
 
-    List<PowerUp> powerUps = new List<PowerUp>();
-    public Player(UUID uuid, string name)
+    List<PowerUp> invPowerUps = new List<PowerUp>();
+
+    List<PowerUp> activePowerUps = new List<PowerUp>();
+
+    List<int[]> path = new List<int[]>();
+    int[] lastPos;
+    public Player(UUID uuid, string name, int[] startPos)
     {
         this.uuid = uuid;
         this.name = name;
+        lastPos = startPos;
     }
 
     public UUID getUUID()
@@ -43,7 +49,7 @@ public class Player
 
     public bool hasPowerUp(string name)
     {
-        foreach (PowerUp powerUp in powerUps)
+        foreach (PowerUp powerUp in activePowerUps)
         {
             if (powerUp.Name == name)
             {
@@ -54,20 +60,54 @@ public class Player
     }
     public void AddPowerUp(PowerUp powerUp)
     {
-        powerUps.Add(powerUp);
-        powerUp.Activate(this);
+        invPowerUps.Add(powerUp);
+    }
+    public PowerUp ActivatePowerUp(string powerUp, object[] args)
+    {
+        foreach (PowerUp p in invPowerUps)
+        {
+            if (p.Name == powerUp)
+            {
+                invPowerUps.Remove(p);
+                activePowerUps.Add(p);
+                p.Activate(this, args);
+                return p;
+            }
+        }
+        Console.WriteLine("PowerUp not found");
+        return null;
     }
 
     public void RemovePowerUp(string powerUp)
     {
-        foreach (PowerUp p in powerUps)
+        foreach (PowerUp p in activePowerUps)
         {
             if (p.Name == powerUp)
             {
-                powerUps.Remove(p);
+                activePowerUps.Remove(p);
                 p.Deactivate(this);
                 return;
             }
         }
+    }
+    public void AddToPath(int[] position)
+    {
+        lastPos = position;
+        path.Add(position);
+    }
+
+    public string[] GetInventory()
+    {
+        string[] inventory = new string[invPowerUps.Count];
+        for (int i = 0; i < invPowerUps.Count; i++)
+        {
+            inventory[i] = invPowerUps[i].Name;
+        }
+        return inventory;
+    }
+
+    public int[] GetLastPos()
+    {
+        return lastPos;
     }
 }

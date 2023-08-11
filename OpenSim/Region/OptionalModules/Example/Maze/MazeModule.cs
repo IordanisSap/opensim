@@ -41,7 +41,9 @@ namespace MazeModule
         #region IRegionModule Members
 
         private UUID startPoint = UUID.Zero;
+        private int[] startPointPos = new int[2] { 0, 0 };
         private UUID endPoint = UUID.Zero;
+        private int[] endPointPos = new int[2] { 0, 0 };
 
         private string mazeControllerName = "MazeController";
         private UUID mazeControllerID = UUID.Zero;
@@ -83,7 +85,7 @@ namespace MazeModule
                 new PowerUp(
                     "Shield",
                     15000,
-                    delegate (Player player)
+                    delegate (Player player, object[] data)
                     {
                         Console.WriteLine("Shield activated");
                         TaskInventoryItem textureItem = m_scene.GetSceneObjectPart(getController()).Inventory.GetInventoryItem("Shield_texture");
@@ -109,13 +111,13 @@ namespace MazeModule
                         playerObj.RootPart.SendFullUpdateToAllClients();
                         playerObj.RootPart.ParentGroup.HasGroupChanged = true;
                     },
-                    delegate (Player player)
+                    delegate (Player player, object[] data)
                     {
                         Primitive.TextureEntry texture = new Primitive.TextureEntry(UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f"));
                         Primitive.TextureEntryFace face = texture.CreateFace(0);
                         face.Glow = 0.04f;
                         face.RGBA = new Color4(0, 0.455f, 0.906f, 1f);
-                        face.Fullbright = true;
+                        face.Fullbright = false;
                         SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
                         if (playerObj == null)
                         {
@@ -143,15 +145,29 @@ namespace MazeModule
                 )
             );
             PowerUpModule.AddPowerUp(
-                                new PowerUp(
+                new PowerUp(
                     "Questionmark",
                     15000,
-                    delegate (Player player)
+                    delegate (Player player, object[] data)
                     {
                         SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
                         playerObj.TeleportObject(player.getUUID(), playerObj.AbsolutePosition + new Vector3(0, 0, 5), Quaternion.Identity, 1);
                     },
-                    delegate (Player player)
+                    delegate (Player player, object[] data)
+                    {
+
+                    }
+                )
+            );
+            PowerUpModule.AddPowerUp(
+                new PowerUp(
+                    "Builder",
+                    100,
+                    delegate (Player player, object[] data)
+                    {
+                        buildPath(player, (string)data[0], Convert.ToInt32(data[1]));
+                    },
+                    delegate (Player player, object[] data)
                     {
 
                     }
@@ -228,7 +244,9 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "floorCollision");
                 m_comms.RegisterScriptInvocation(this, "powerUpCollision");
                 m_comms.RegisterScriptInvocation(this, "endPointCollision");
-
+                m_comms.RegisterScriptInvocation(this, "movePlayer");
+                m_comms.RegisterScriptInvocation(this, "consumePowerUp");
+                m_comms.RegisterScriptInvocation(this, "getPowerUps");
 
 
                 // Register some constants as well
@@ -245,6 +263,9 @@ namespace MazeModule
 
         private void teleportToStart(UUID player)
         {
+            Player p = getPlayer(player);
+            if (p == null) return;
+            p.AddToPath(startPointPos);
             SceneObjectPart start = m_scene.GetSceneObjectPart(startPoint);
             SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
             playerObj.TeleportObject(playerObj.UUID, start.AbsolutePosition, Quaternion.Identity, 1);
@@ -301,6 +322,7 @@ namespace MazeModule
                 if (binaryMaze[x, 0] == 0)
                 {
                     startPoint = mazeObjUUIDs[x, 0];
+                    startPointPos = new int[2] { x, 0 };
                 }
             }
             for (int x = 0; x < size * 2 + 1; x++)
@@ -308,6 +330,7 @@ namespace MazeModule
                 if (binaryMaze[x, size * 2] == 0)
                 {
                     endPoint = mazeObjUUIDs[x, size * 2];
+                    endPointPos = new int[2] { x, size * 2 };
                 }
             }
         }
@@ -402,9 +425,7 @@ namespace MazeModule
                 List<SceneObjectGroup> newBall = m_scene.RezObject(controller, item, startPointObj.AbsolutePosition, null, Vector3.Zero, 0, false, false);
                 mazeBallUUID = newBall[0].UUID;
                 newBall[0].ResumeScripts();
-                players.Add(new Player(newBall[0].UUID, "player" + players.Count.ToString()));
-
-
+                players.Add(new Player(newBall[0].UUID, "player" + players.Count.ToString(), startPointPos));
 
             }
             catch (Exception e)
@@ -529,6 +550,23 @@ namespace MazeModule
         {
             return players.Find(obj => obj.getUUID() == player);
         }
+
+        private void buildPath(Player p, string direction, int length)
+        {
+            if (p == null) return;
+            if (p.GetLastPos()[0] < 0 || p.GetLastPos()[0] > mazeObjUUIDs.GetLength(0)) return;
+            if (p.GetLastPos()[1] < 0 || p.GetLastPos()[1] > mazeObjUUIDs.GetLength(1)) return;
+            Vector3 pos = m_scene.GetSceneObjectPart(mazeObjUUIDs[p.GetLastPos()[0], p.GetLastPos()[1]]).AbsolutePosition;
+            for (int i = 0; i < length; i++)
+            {
+                if (direction == "front") pos += new Vector3(0, objScale, 0);
+                else if (direction == "back") pos += new Vector3(0, -objScale, 0);
+                else if (direction == "right") pos += new Vector3(objScale, 0, 0);
+                else if (direction == "left") pos += new Vector3(-objScale, 0, 0);
+                generateCube(p.getUUID(), pos);
+            }
+        }
+
         public void obstacleCollision(UUID hostID, UUID scriptID, UUID player)
         {
             m_log.WarnFormat("[MazeMod] Ball collided with obstacle");
@@ -542,27 +580,43 @@ namespace MazeModule
             m_log.WarnFormat("[MazeMod] Ball collided with powerup");
             Player p = getPlayer(player);
             if (p == null) return;
-            string timerId = p.getUUID().ToString() + hostID.ToString();
-            PowerUpModule.ActivatePowerUp(hostID, p);
-            if (timerDictionary.ContainsKey(timerId))
+            PowerUpModule.AddPowerUp(hostID, p);
+        }
+
+        public void consumePowerUp(UUID hostID, UUID scriptID, string powerup, object[] args)
+        {
+            try
             {
-                Timer timerToRemove = timerDictionary[timerId];
-                timerToRemove.Dispose();
-                timerDictionary.Remove(timerId);
-            }
-            Timer timer = new Timer((object state) =>
-            {
-                Console.WriteLine("timerrr"); PowerUpModule.DeactivatePowerUp(hostID, p);
+                Player p = getPlayer(hostID);
+                if (p == null) return;
+                PowerUp activatedPowerup = p.ActivatePowerUp(powerup, args);
+                string timerId = p.getUUID().ToString() + powerup;
+
                 if (timerDictionary.ContainsKey(timerId))
                 {
                     Timer timerToRemove = timerDictionary[timerId];
                     timerToRemove.Dispose();
                     timerDictionary.Remove(timerId);
-                }
-            }, null, PowerUpModule.getPowerUp(hostID).Duration, Timeout.Infinite);
-            timerDictionary.Add(timerId, timer);
-        }
 
+                }
+
+                Timer timer = new Timer((object state) =>
+                {
+                    p.RemovePowerUp(powerup);
+                    if (timerDictionary.ContainsKey(timerId))
+                    {
+                        Timer timerToRemove = timerDictionary[timerId];
+                        timerToRemove.Dispose();
+                        timerDictionary.Remove(timerId);
+                    }
+                }, null, PowerUpModule.getPowerUp(powerup).Duration, Timeout.Infinite);
+                timerDictionary.Add(timerId, timer);
+            }
+            catch (Exception e)
+            {
+                m_log.WarnFormat("[MazeMod] Error consuming powerup: " + e.Message);
+            }
+        }
         public void floorCollision(UUID hostID, UUID scriptID, UUID player)
         {
             m_log.WarnFormat("[MazeMod] Ball collided with obstacle");
@@ -588,6 +642,22 @@ namespace MazeModule
 
         }
 
+        public void movePlayer(UUID hostID, UUID scriptID, Vector3 dist)
+        {
+            Player p = getPlayer(hostID);
+            if (p == null) return;
+            int[] newMove = new int[2] { p.GetLastPos()[0] + (int)dist.X, p.GetLastPos()[1] + (int)dist.Y };
+            p.AddToPath(newMove);
+            m_log.WarnFormat("[MazeMod] Player moved, last pos " + p.GetLastPos()[0] + ", " + p.GetLastPos()[1]);
+        }
+
+        public object[] getPowerUps(UUID hostID, UUID scriptID, UUID playerID)
+        {
+            Player p = getPlayer(playerID);
+            if (p == null) return new object[0];
+            object[] powerUps = p.GetInventory();
+            return powerUps;
+        }
         public int getArenaCommChannel(UUID hostID, UUID scriptID)
         {
             return commChannel;

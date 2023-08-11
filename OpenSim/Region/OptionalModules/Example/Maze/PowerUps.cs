@@ -23,7 +23,7 @@ using System.Linq;
 
 public class PowerUp
 {
-    public delegate void Callback(Player player);
+    public delegate void Callback(Player player, object[] data = null);
     public Callback ActivateCallback { get; set; }
     public Callback DeactivateCallback { get; set; }
 
@@ -39,11 +39,11 @@ public class PowerUp
         this.DeactivateCallback = onDeactivate;
     }
 
-    public void Activate(Player player)
+    public void Activate(Player player, object[] data)
     {
         if (ActivateCallback != null)
         {
-            ActivateCallback(player);
+            ActivateCallback(player, data);
         }
     }
 
@@ -104,23 +104,21 @@ public class PowerUpModule
         objectMap.Add(uuid, powerUpName);
     }
 
-    public void ActivatePowerUp(UUID powerUpUUID, Player player)
+    public void AddPowerUp(UUID powerUpUUID, Player player)
     {
         if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return;
         PowerUp powerUp = actionMap[powerUpName];
         player.AddPowerUp(powerUp);
-    }
-    public void DeactivatePowerUp(UUID powerUpUUID, Player player)
-    {
-        if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return;
-        PowerUp powerUp = actionMap[powerUpName];
-        player.RemovePowerUp(powerUp.Name);
     }
 
     public PowerUp getPowerUp(UUID powerUpUUID)
     {
         if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return null;
         return actionMap[powerUpName];
+    }
 
+    public PowerUp getPowerUp(string powerUpName)
+    {
+        return actionMap[powerUpName];
     }
 }
