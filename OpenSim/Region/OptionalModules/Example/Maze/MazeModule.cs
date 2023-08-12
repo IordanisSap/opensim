@@ -66,6 +66,8 @@ namespace MazeModule
         private PowerUpModule PowerUpModule = new PowerUpModule();
 
         private ObstacleModule ObstacleModule = new ObstacleModule();
+
+        private AttachmentModule AttachmentModule = null;
         private UUID mazeBallUUID = UUID.Zero;
         public bool isOwner(UUID avatarID)
         {
@@ -226,6 +228,7 @@ namespace MazeModule
                 m_scene = scene;
                 m_comms = m_scene.RequestModuleInterface<IScriptModuleComms>();
                 m_worldComm = m_scene.RequestModuleInterface<IWorldComm>();
+                AttachmentModule = new AttachmentModule(m_scene);
                 landOwnerUUID = scene.RegionInfo.EstateSettings.EstateOwner;
                 if (m_comms == null)
                 {
@@ -580,7 +583,9 @@ namespace MazeModule
             m_log.WarnFormat("[MazeMod] Ball collided with powerup");
             Player p = getPlayer(player);
             if (p == null) return;
-            PowerUpModule.AddPowerUp(hostID, p);
+            PowerUp powerUp = PowerUpModule.AddPowerUp(hostID, p);
+            Console.WriteLine("Powerup: " + powerUp.Name);
+            AttachmentModule.attachToPlayer(p, powerUp.Name);
         }
 
         public void consumePowerUp(UUID hostID, UUID scriptID, string powerup, object[] args)
@@ -590,6 +595,7 @@ namespace MazeModule
                 Player p = getPlayer(hostID);
                 if (p == null) return;
                 PowerUp activatedPowerup = p.ActivatePowerUp(powerup, args);
+                AttachmentModule.removeAttachment(p, powerup);
                 string timerId = p.getUUID().ToString() + powerup;
 
                 if (timerDictionary.ContainsKey(timerId))

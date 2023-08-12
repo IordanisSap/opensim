@@ -110,4 +110,9 @@ public class Player
     {
         return lastPos;
     }
+
+    public List<PowerUp> GetInvPowerUps()
+    {
+        return invPowerUps;
+    }
 }

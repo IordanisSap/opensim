@@ -104,11 +104,12 @@ public class PowerUpModule
         objectMap.Add(uuid, powerUpName);
     }
 
-    public void AddPowerUp(UUID powerUpUUID, Player player)
+    public PowerUp AddPowerUp(UUID powerUpUUID, Player player)
     {
-        if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return;
+        if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return null;
         PowerUp powerUp = actionMap[powerUpName];
         player.AddPowerUp(powerUp);
+        return powerUp;
     }
 
     public PowerUp getPowerUp(UUID powerUpUUID)
