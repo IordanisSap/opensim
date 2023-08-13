@@ -300,6 +300,10 @@ namespace MazeModule
             int[,] binaryMaze = new BinaryMaze2D(maze.getCells()).getCells();
             MazeSolver solver = new MazeSolver(binaryMaze);
             solver.Solve();
+            LandmarkCreator creator = new LandmarkCreator(solver.getPath());
+            creator.printLines();
+            creator.printShapes();
+            creator.printLandmarks();
             mazeObjUUIDs = new UUID[size * 2 + 1, size * 2 + 1];
             UUID hostID = getController();
             Vector3 pos = m_scene.GetSceneObjectPart(hostID).AbsolutePosition;

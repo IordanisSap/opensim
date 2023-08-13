@@ -307,3 +307,204 @@ public class MazeSolver
         return _path;
     }
 }
+
+
+public class MazeLandmark
+{
+    private int[] startPoint;
+
+    public MazeLandmark(int[] startPoint)
+    {
+        this.startPoint = startPoint;
+    }
+
+    public void Print()
+    {
+        Console.WriteLine("Landmark: [" + startPoint[0] + "," + startPoint[1] + "]");
+    }
+}
+
+public class LandmarkCreator
+{
+    private List<int[]> path;
+    private Random _random = new Random();
+    private int size = 0;
+    private List<List<int[]>> lines = new List<List<int[]>>();
+    private List<List<int[]>> sigmas = new List<List<int[]>>();
+
+    private List<List<int[]>> pis = new List<List<int[]>>();
+
+
+    private List<MazeLandmark> landmarks = new List<MazeLandmark>();
+
+    public LandmarkCreator(List<int[]> path, int size = 0)
+    {
+        this.path = path;
+        this.size = size;
+        getLines();
+        getShapes();
+        //lines.Sort((line1, line2) => Math.Abs(line2.Count).CompareTo(Math.Abs(line1.Count)));
+        createLandmarks();
+    }
+
+    private void getLines()
+    {
+        lines.Add(new List<int[]> { path[0] });
+        int current = 0;
+        bool vertical = true;
+        for (int i = 1; i < path.Count; i++)
+        {
+            if (path[i][0] == path[i - 1][0] && vertical || path[i][1] == path[i - 1][1] && !vertical)
+            {
+                lines[current].Add(path[i]);
+            }
+            else
+            {
+                current++;
+                lines.Add(new List<int[]> { path[i] });
+                vertical = !vertical;
+            }
+        }
+    }
+
+    private void getShapes()
+    {
+        const int PI_SIZE = 3;
+        const int FAIL = -1;
+        bool OVERLAP = false;
+        int getNextHorizontalPoint(int start)
+        {
+            if (start + PI_SIZE >= path.Count) return FAIL;
+            for (int i = start + 1; i < start + PI_SIZE; i++)
+            {
+                if (path[i][0] != path[i - 1][0]) return FAIL;
+            }
+            return start + PI_SIZE - 1;
+        }
+
+        int getNextVerticalPoint(int start)
+        {
+            if (start + PI_SIZE >= path.Count) return FAIL;
+            for (int i = start + 1; i < start + PI_SIZE; i++)
+            {
+                if (path[i][1] != path[i - 1][1]) return FAIL;
+            }
+            return start + PI_SIZE - 1;
+        }
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            Console.Write("[" + path[i][0] + ", " + path[i][1] + "] ");
+            int firstHorizontalPoint = getNextHorizontalPoint(i);
+            if (firstHorizontalPoint != FAIL)
+            {
+                //Console.Write("firstHorizontalPoint");
+                int secondVerticalPoint = getNextVerticalPoint(firstHorizontalPoint);
+                if (secondVerticalPoint != FAIL)
+                {
+                    //Console.Write("secondVerticalPoint");
+                    int thirdHorizontalPoint = getNextHorizontalPoint(secondVerticalPoint);
+                    if (thirdHorizontalPoint != FAIL)
+                    {
+                        //Console.Write("thirdHorizontalPoint");
+                        if (path[i][0] == path[i + 6][0] || path[i][1] == path[i + 6][1]) pis.Add(new List<int[]> { path[i], path[i + 1], path[i + 2], path[i + 3], path[i + 4], path[i + 5], path[i + 6] });
+                        else sigmas.Add(new List<int[]> { path[i], path[i + 1], path[i + 2], path[i + 3], path[i + 4], path[i + 5], path[i + 6] });
+                        if (!OVERLAP) i += 6;
+                    }
+                }
+            }
+            int firstVerticalPoint = getNextVerticalPoint(i);
+            if (firstVerticalPoint != FAIL)
+            {
+                int secondHorizontalPoint = getNextHorizontalPoint(firstVerticalPoint);
+                if (secondHorizontalPoint != FAIL)
+                {
+                    int thirdVerticalPoint = getNextVerticalPoint(secondHorizontalPoint);
+                    if (thirdVerticalPoint != FAIL)
+                    {
+                        if (path[i][0] == path[i + 6][0] || path[i][1] == path[i + 6][1]) pis.Add(new List<int[]> { path[i], path[i + 1], path[i + 2], path[i + 3], path[i + 4], path[i + 5], path[i + 6] });
+                        else sigmas.Add(new List<int[]> { path[i], path[i + 1], path[i + 2], path[i + 3], path[i + 4], path[i + 5], path[i + 6] });
+                        if (!OVERLAP) i += 6;
+                    }
+                }
+            }
+        }
+    }
+
+    private void createLandmarks()
+    {
+        const int FACTOR = 3;
+        // List<List<int[]>> landMarkLines = lines.GetRange(0, lines.Count / 2);
+        // foreach (List<int[]> line in landMarkLines)
+        // {
+        //     if (line.Count > 1)
+        //     {
+        //         int[] midPoint = line[line.Count / 2];
+        //         landmarks.Add(new Landmark(midPoint));
+        //     }
+        // }
+        int totalLandMarks = lines.Count / FACTOR;
+        landmarks.Add(new MazeLandmark(path[0]));
+        for (int i = 0; i < totalLandMarks; i += 1)
+        {
+            List<List<int[]>> landMarkLines = lines.GetRange(i * FACTOR, FACTOR);
+            List<int[]> maxLine = landMarkLines[0];
+            foreach (List<int[]> line in landMarkLines)
+            {
+                if (line.Count > maxLine.Count)
+                {
+                    maxLine = line;
+                }
+            }
+            if (maxLine.Count > 1 && maxLine.Count > 2)
+            {
+                int[] midPoint = maxLine[maxLine.Count / 2];
+                if (midPoint[0] == path[0][0]) continue;
+                landmarks.Add(new MazeLandmark(midPoint));
+            }
+        }
+
+        if (landmarks.Count == 0) landmarks.Add(new MazeLandmark(path[path.Count / 2]));
+        landmarks.Add(new MazeLandmark(path[path.Count - 1]));
+    }
+
+    public void printLandmarks()
+    {
+        foreach (MazeLandmark landmark in landmarks)
+            landmark.Print();
+    }
+    public void printLines()
+    {
+        Console.WriteLine("Lines:");
+        foreach (List<int[]> line in lines)
+        {
+            foreach (int[] point in line)
+            {
+                Console.Write("[" + point[0] + "," + point[1] + "] ");
+            }
+            Console.WriteLine();
+        }
+    }
+    public void printShapes()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Pis:");
+        foreach (List<int[]> pi in pis)
+        {
+            foreach (int[] point in pi)
+            {
+                Console.Write("[" + point[0] + "," + point[1] + "] ");
+            }
+            Console.WriteLine();
+        }
+        Console.WriteLine("Sigmas:");
+        foreach (List<int[]> sigma in sigmas)
+        {
+            foreach (int[] point in sigma)
+            {
+                Console.Write("[" + point[0] + "," + point[1] + "] ");
+            }
+            Console.WriteLine();
+        }
+    }
+}
