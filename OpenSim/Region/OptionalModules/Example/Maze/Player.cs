@@ -115,4 +115,10 @@ public class Player
     {
         return invPowerUps;
     }
+
+    public void Reset(){
+        invPowerUps.Clear();
+        activePowerUps.Clear();
+        path.Clear();
+    }
 }

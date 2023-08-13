@@ -672,6 +672,11 @@ namespace MazeModule
         public void resetMaze(UUID hostID, UUID scriptID)
         {
             deleteMaze();
+            foreach (Player p in players)
+            {
+                p.Reset();
+                AttachmentModule.Reset();
+            }
         }
 
         public void generateMaze3D(UUID hostID, UUID scriptID, int size)

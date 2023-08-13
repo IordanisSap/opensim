@@ -2024,6 +2024,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>The part where the script was rezzed if successful.  False otherwise.</returns>
         public SceneObjectPart RezScriptFromAgentInventory(UUID agentID, UUID fromItemID, uint localID)
         {
+            Console.WriteLine("TRYING TO REZZZZ");
             UUID copyID = UUID.Random();
             InventoryItemBase item = InventoryService.GetItem(agentID, fromItemID);
 
@@ -2039,8 +2040,17 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectPart part = GetSceneObjectPart(localID);
                 if (part != null)
                 {
-                    if (!Permissions.CanEditObjectInventory(part.UUID, agentID))
+                    Console.WriteLine("BYPASSING PERMISSIONS CHECKS");
+                    IClientAPI client = null;
+                    ScenePresence avatar;
+                    if (TryGetScenePresence(agentID, out avatar))
+                        client = avatar.ControllingClient;
+
+                    if (!Permissions.CanDropInObjectInv(item,client, part))
                         return null;
+                        
+                    // if (!Permissions.CanEditObjectInventory(part.UUID, agentID))
+                    //     return null;
 
                     part.ParentGroup.AddInventoryItem(agentID, localID, item, copyID);
                     // TODO: switch to posting on_rez here when scripts

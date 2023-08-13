@@ -2429,9 +2429,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             UUID spID = sp.UUID;
             bool spNotOwner = spID.NotEqual(destOwner);
 
-            // scripts can't be droped
-            if(spNotOwner && item.InvType == (int)InventoryType.LSL)
-                return false;
+
+            Console.WriteLine("PERMISSIONS CALLED");
+            Console.WriteLine("sp {0} {1}",spNotOwner,item.InvType == (int)InventoryType.LSL);
+            // scripts can be droped
+            // if(spNotOwner && item.InvType == (int)InventoryType.LSL)
+            //     return false;
 
             if(spNotOwner || item.Owner.NotEqual(destOwner))
             {

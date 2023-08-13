@@ -29,16 +29,6 @@ default
     {
         move_decay(target);
         list powerUps = getPowerUps(llGetKey());
-        integer listLength = llGetListLength(powerUps);
-        for (integer i = 0; i < listLength; i++)
-        {
-            // Get each string from the list
-            string currentString = llList2String(powerUps, i);
-
-            // Print the current string
-            llOwnerSay(currentString);
-        }
-
     }
     on_rez(integer start_param)
     {
@@ -80,7 +70,7 @@ translate_command(list command)
 move(integer x, integer y, integer z){
     target = llGetPos()+<2*x,2*y,-10>;
     movePlayer(<x,y,z>);
-    llApplyImpulse(<2*x,2*y,-10> * llGetMass(), FALSE);
+    llApplyImpulse(<2*x,2*y,-10> * llGetMass()/2, FALSE);
     llMoveToTarget(llGetPos()+<2*x,2*y,-10>,llAbs(x+y+z)*1);
 }
 

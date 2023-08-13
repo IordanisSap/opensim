@@ -122,4 +122,21 @@ public class AttachmentModule
         }
     }
 
+    public void Reset(){
+        foreach (KeyValuePair<Player, List<PowerUpAttachment>> entry in displayPowerUps)
+        {
+            foreach (PowerUpAttachment powerUp in entry.Value)
+            {
+                SceneObjectPart toRemovePowerUp = m_scene.GetSceneObjectPart(powerUp.powerUpUUID);
+                if (toRemovePowerUp != null)
+                {
+                    toRemovePowerUp.ParentGroup.DetachToGround();
+                    toRemovePowerUp.ParentGroup.DeleteGroupFromScene(false);
+                }
+            }
+            entry.Value.Clear();
+        }
+        displayPowerUps.Clear();
+    }
+
 }
