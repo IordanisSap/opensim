@@ -309,21 +309,6 @@ public class MazeSolver
 }
 
 
-public class MazeLandmark
-{
-    private int[] startPoint;
-
-    public MazeLandmark(int[] startPoint)
-    {
-        this.startPoint = startPoint;
-    }
-
-    public void Print()
-    {
-        Console.WriteLine("Landmark: [" + startPoint[0] + "," + startPoint[1] + "]");
-    }
-}
-
 public class LandmarkCreator
 {
     private List<int[]> path;
@@ -335,7 +320,7 @@ public class LandmarkCreator
     private List<List<int[]>> pis = new List<List<int[]>>();
 
 
-    private List<MazeLandmark> landmarks = new List<MazeLandmark>();
+    private List<Landmark> landmarks = new List<Landmark>();
 
     public LandmarkCreator(List<int[]> path, int size = 0)
     {
@@ -433,7 +418,7 @@ public class LandmarkCreator
 
     private void createLandmarks()
     {
-        const int FACTOR = 3;
+        const int FACTOR = 4;
         // List<List<int[]>> landMarkLines = lines.GetRange(0, lines.Count / 2);
         // foreach (List<int[]> line in landMarkLines)
         // {
@@ -444,7 +429,7 @@ public class LandmarkCreator
         //     }
         // }
         int totalLandMarks = lines.Count / FACTOR;
-        landmarks.Add(new MazeLandmark(path[0]));
+        landmarks.Add(new Landmark(path[0]));
         for (int i = 0; i < totalLandMarks; i += 1)
         {
             List<List<int[]>> landMarkLines = lines.GetRange(i * FACTOR, FACTOR);
@@ -460,17 +445,21 @@ public class LandmarkCreator
             {
                 int[] midPoint = maxLine[maxLine.Count / 2];
                 if (midPoint[0] == path[0][0]) continue;
-                landmarks.Add(new MazeLandmark(midPoint));
+                landmarks.Add(new Landmark(midPoint));
             }
         }
 
-        if (landmarks.Count == 0) landmarks.Add(new MazeLandmark(path[path.Count / 2]));
-        landmarks.Add(new MazeLandmark(path[path.Count - 1]));
+        if (landmarks.Count == 0) landmarks.Add(new Landmark(path[path.Count / 2]));
+        //landmarks.Add(new Landmark(path[path.Count - 1]));
     }
 
+    public List<Landmark> getLandmarks()
+    {
+        return landmarks;
+    }
     public void printLandmarks()
     {
-        foreach (MazeLandmark landmark in landmarks)
+        foreach (Landmark landmark in landmarks)
             landmark.Print();
     }
     public void printLines()
@@ -506,5 +495,37 @@ public class LandmarkCreator
             }
             Console.WriteLine();
         }
+    }
+
+    public void printPointsOfInterest()
+    {
+        Console.WriteLine("Points of Interest:");
+        foreach (int[] point in getPointsOfInterest())
+        {
+            Console.Write("[" + point[0] + "," + point[1] + "] ");
+        }
+        Console.WriteLine();
+    }
+    public List<List<int[]>> getPis()
+    {
+        return pis;
+    }
+    public List<List<int[]>> getSigmas()
+    {
+        return sigmas;
+    }
+
+    public List<int[]> getPointsOfInterest()
+    {
+        List<int[]> pointsOfInterest = new List<int[]>();
+        foreach (List<int[]> pi in pis)
+        {
+            pointsOfInterest.Add(pi[pi.Count/2]);
+        }
+        foreach (List<int[]> sigma in sigmas)
+        {
+            pointsOfInterest.Add(sigma[sigma.Count/2]);
+        }
+        return pointsOfInterest;
     }
 }

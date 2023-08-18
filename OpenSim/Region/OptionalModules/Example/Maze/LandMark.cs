@@ -23,36 +23,19 @@ using System.Linq;
 public class Landmark
 {
     private int[] startPoint;
-    private int[] endPoint;
 
-    public Landmark(int[] startPoint, int[] endPoint)
+    public Landmark(int[] startPoint)
     {
         this.startPoint = startPoint;
-        this.endPoint = endPoint;
-    }
-}
-
-public class LandmarkModule
-{
-    private Dictionary<UUID, Landmark> landmarkMap;
-
-    public LandmarkModule()
-    {
-        landmarkMap = new Dictionary<UUID, Landmark>();
     }
 
-    public void AddLandmark(UUID uuid, Landmark landmark)
+    public void Print()
     {
-        landmarkMap.Add(uuid, landmark);
+        Console.WriteLine("Landmark: [" + startPoint[0] + "," + startPoint[1] + "]");
     }
 
-    public Landmark GetLandmark(UUID uuid)
+    public int[] getStartPoint()
     {
-        return landmarkMap[uuid];
-    }
-
-    public void RemoveLandmark(UUID uuid)
-    {
-        landmarkMap.Remove(uuid);
+        return startPoint;
     }
 }

@@ -5,6 +5,7 @@ integer powerup_duration = 8;
 float current_powerup_timestamp = 0;
 vector target = ZERO_VECTOR;
 
+
 #include "ball/parsing.lsl"
 #include "ball/physics.lsl"
 #include "ball/texture_animations.lsl"
@@ -12,7 +13,9 @@ default
 {
     state_entry()
     {
+        llOwnerSay(llGetMass());
         llSleep(1.0);
+        llSetStatus(STATUS_PHYSICS, TRUE);
         reset_texture();
 
         listen_handle = llListen(0, "", "", "");
@@ -68,17 +71,16 @@ translate_command(list command)
 }
 
 move(integer x, integer y, integer z){
-    target = llGetPos()+<2*x,2*y,-10>;
+    target = llGetPos()+<2*x,2*y,-VERTICAL_DIFF>;
     movePlayer(<x,y,z>);
-    llApplyImpulse(<2*x,2*y,-10> * llGetMass()/2, FALSE);
-    llMoveToTarget(llGetPos()+<2*x,2*y,-10>,llAbs(x+y+z)*1);
+    llApplyImpulse(<2*x,2*y,-VERTICAL_DIFF> * llGetMass()*500, FALSE);
+    llMoveToTarget(llGetPos()+<2*x,2*y,-VERTICAL_DIFF>,llAbs(x+y+z)*1);
 }
 
 powerup(list commands){
     list args = llDeleteSubList(commands, 0, 1);
     llOwnerSay("Given args to powerup: "+ llList2String(args,0));
     llOwnerSay("Given args to powerup: "+ llList2String(args,1));
-
     consumePowerUp(llList2String(commands,1), args);
 }
 

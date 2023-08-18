@@ -1397,7 +1397,6 @@ namespace OpenSim.Region.PhysicsModule.BulletS
                     break;
 
                 case ProfileShape.Circle:
-
                     if (BaseShape.PathCurve == (byte)Extrusion.Straight)
                         {
                         volume *= 0.78539816339f; // elipse base
@@ -1600,6 +1599,7 @@ namespace OpenSim.Region.PhysicsModule.BulletS
             DetailLog("{0},BSPrim.CalculateMass,den={1},vol={2},mass={3},pathB={4},pathE={5},profB={6},profE={7},siz={8}",
                                 LocalID, Density, volume, returnMass, pathBegin, pathEnd, profileBegin, profileEnd, _size);
 
+            if (BaseShape.ProfileShape == ProfileShape.HalfCircle) returnMass *= 1000f; //Temporary hack for mass
             return returnMass;
         }// end CalculateMass
         #endregion Mass Calculation

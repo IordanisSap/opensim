@@ -121,4 +121,5 @@ public class Player
         activePowerUps.Clear();
         path.Clear();
     }
+
 }
