@@ -24,11 +24,16 @@ public class Obstacle
 {
     public delegate void Callback(Player player);
     public Callback CollisionCallback { get; set; }
+
+    public delegate bool PlaceCondition(int[] pos);
+
+    public PlaceCondition PlaceConditionCallback { get; set; }
     public string Name { get; set; }
-    public Obstacle(string name, Callback onCollision)
+    public Obstacle(string name, Callback onCollision, PlaceCondition placeCondition)
     {
         this.Name = name;
         this.CollisionCallback = onCollision;
+        this.PlaceConditionCallback = placeCondition;
     }
     public void OnCollision(Player player)
     {
@@ -65,6 +70,13 @@ public class ObstacleModule
         Obstacle randomObstacle = actionMap.ElementAt(random.Next(0, actionMap.Count)).Value;
         return randomObstacle;
     }
+
+    public bool CanPlaceObstacle(string obstacleName, int[] pos)
+    {
+        if (!actionMap.TryGetValue(obstacleName, out Obstacle obstacle)) return false;
+        return obstacle.PlaceConditionCallback(pos);
+    }
+        
     public void AddObstacle(Obstacle obstacle)
     {
         actionMap.Add(obstacle.Name, obstacle);

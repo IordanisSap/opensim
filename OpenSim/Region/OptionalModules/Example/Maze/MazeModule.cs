@@ -65,6 +65,7 @@ namespace MazeModule
 
         private Dictionary<string, Timer> timerDictionary = new Dictionary<string, Timer>();
 
+        private MazeSolver mazeSolver = null;
         private PowerUpModule PowerUpModule = new PowerUpModule();
 
         private ObstacleModule ObstacleModule = new ObstacleModule();
@@ -178,6 +179,20 @@ namespace MazeModule
                     }
                 )
             );
+            PowerUpModule.AddPowerUp(
+                new PowerUp(
+                    "Jump",
+                    100,
+                    delegate (Player player, object[] data)
+                    {
+                        //buildPath(player, (string)data[0], Convert.ToInt32(data[1]));
+                    },
+                    delegate (Player player, object[] data)
+                    {
+
+                    }
+                )
+            );
         }
 
         private void initObstacles()
@@ -190,6 +205,24 @@ namespace MazeModule
                         if (player.hasPowerUp("Shield")) { return; }
                         SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
                         teleportToStart(player.getUUID());
+                    },
+                    (int[] pos) =>
+                    {
+                        List<int[]> path = mazeSolver.getPath();
+                        bool inPath = false;
+                        foreach (int[] array in path)
+                        {
+                            if (array[0] == pos[0] && array[1] == pos[1]) inPath = true;
+                        }
+                        if (!inPath) Console.WriteLine("Spikes found not in path, pos: " + pos[0] + ", " + pos[1] + "");
+                        mazeSolver.printPath(); 
+                        if (!inPath) return true;
+                        foreach (int[] array in path)
+                        {
+                            if (array[0] == pos[0] && array[1] == pos[1]) return false;
+                            if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") return true;
+                        }
+                        return false;
                     }
                 )
             );
@@ -276,23 +309,14 @@ namespace MazeModule
                 Console.WriteLine("Teleporting player to start");
                 Player p = getPlayer(player);
                 if (p == null) return;
-                Console.WriteLine("111");
                 UUID checkPoint = LandmarkModule.getPlayerLandmark(p.getUUID());
                 Landmark landmark = LandmarkModule.getLandmark(checkPoint);
-                Console.WriteLine("222: "+ checkPoint.ToString());
-
                 SceneObjectPart checkPointInstance = m_scene.GetSceneObjectPart(checkPoint);
                 if (checkPointInstance == null) return;
-                Console.WriteLine("333");
-
                 p.AddToPath(landmark.getStartPoint());
-                Console.WriteLine("444");
-
                 SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
-                Console.WriteLine("555:" + checkPointInstance.AbsolutePosition);
-
-                playerObj.TeleportObject(playerObj.UUID, checkPointInstance.AbsolutePosition + new Vector3(0,0,objScale), Quaternion.Identity, 1);
-                playerObj.RootPart.ParentGroup.MoveToTarget( checkPointInstance.AbsolutePosition - new Vector3(0,0,checkPointInstance.Scale.Z*2), 0.5f);
+                playerObj.TeleportObject(playerObj.UUID, checkPointInstance.AbsolutePosition + new Vector3(0, 0, objScale), Quaternion.Identity, 1);
+                playerObj.RootPart.ParentGroup.MoveToTarget(checkPointInstance.AbsolutePosition - new Vector3(0, 0, checkPointInstance.Scale.Z * 2), 0.5f);
             }
             catch (Exception e)
             {
@@ -310,19 +334,19 @@ namespace MazeModule
             Console.WriteLine("Generating:\n");
             maze.printMaze();
             int[,] binaryMaze = new BinaryMaze2D(maze.getCells()).getCells();
-            MazeSolver solver = new MazeSolver(binaryMaze);
-            solver.Solve();
-            LandmarkCreator creator = new LandmarkCreator(solver.getPath());
+            mazeSolver = new MazeSolver(binaryMaze);
+            mazeSolver.Solve();
+            LandmarkCreator creator = new LandmarkCreator(mazeSolver.getPath());
             creator.printShapes();
             creator.printPointsOfInterest();
 
 
             generatePath(binaryMaze, size);
 
-            //LoadEndPointObject(endPoint);
+            LoadEndPointObject(endPoint);
             createBall(startPoint);
+            createPowerUps(mazeObjUUIDs, creator.getPointsOfInterest(), mazeSolver.getPath());
             createObstacles(mazeObjUUIDs);
-            createPowerUps(mazeObjUUIDs, mazeObstacleUUIDs, creator.getPointsOfInterest(), solver.getPath());
             createLandmarks(creator.getLandmarks(), mazeObjUUIDs);
 
             Vector3 pos = m_scene.GetSceneObjectPart(hostID).AbsolutePosition;
@@ -482,9 +506,10 @@ namespace MazeModule
                     {
                         if (map[x, y] != UUID.Zero)
                         {
-                            if (mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 20) != 0) continue;
+                            if (mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 1) != 0) continue;
                             SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
                             Obstacle randomObstacle = ObstacleModule.GetRandomObstacle();
+                            if (!ObstacleModule.CanPlaceObstacle(randomObstacle.Name, new int[2] { x, y })) continue;
                             m_log.WarnFormat("[MazeMod] Creating obstacle: " + randomObstacle.Name);
                             TaskInventoryItem obstacleInvItem = controller.Inventory.GetInventoryItem(randomObstacle.Name);
                             SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(map[x, y]);
@@ -502,8 +527,9 @@ namespace MazeModule
             }
         }
 
-        private void createPowerUps(UUID[,] map, UUID[,] obstacles, List<int[]> pointsOfInterest, List<int[]> path)
+        private void createPowerUps(UUID[,] map, List<int[]> pointsOfInterest, List<int[]> path)
         {
+            SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
             try
             {
                 mazePowerupsUUIDs = new UUID[map.GetLength(0), map.GetLength(1)];
@@ -537,14 +563,15 @@ namespace MazeModule
                             {
                                 if (isInPath || (mazePowerupsUUIDs[x - 1, y] != UUID.Zero || mazePowerupsUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 20) != 0)) continue;
                             }
-                            SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
 
                             PowerUp randomPowerUp = PowerUpModule.GetRandomPowerUp();
+                            while (randomPowerUp.Name == "Jump")
+                            {
+                                randomPowerUp = PowerUpModule.GetRandomPowerUp();
+                            }
                             TaskInventoryItem powerup = controller.Inventory.GetInventoryItem(randomPowerUp.Name);
                             SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(map[x, y]);
-                            SceneObjectPart obstaclePoint = m_scene.GetSceneObjectPart(obstacles[x, y]);
                             Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z * 1.15f);
-                            if (obstaclePoint != null) spawnPos += new Vector3(0, 0, obstaclePoint.Scale.Z * 2.2f);
                             List<SceneObjectGroup> newPowerup = m_scene.RezObject(controller, powerup, spawnPos, null, Vector3.Zero, 0, false, false);
                             mazePowerupsUUIDs[x, y] = newPowerup[0].UUID;
                             newPowerup[0].ResumeScripts();
@@ -552,10 +579,19 @@ namespace MazeModule
                         }
                     }
                 }
+                // PowerUp endPowerup = PowerUpModule.getPowerUp("Jump");
+                // TaskInventoryItem endPowerupInvItem = controller.Inventory.GetInventoryItem(endPowerup.Name);
+                // SceneObjectPart endPointInstance = m_scene.GetSceneObjectPart(endPoint);
+                // Vector3 endPos = endPointInstance.AbsolutePosition + new Vector3(0, 0, endPointInstance.Scale.Z * 1.15f);
+                // List<SceneObjectGroup> endPowerupInstance = m_scene.RezObject(controller, endPowerupInvItem, endPos, null, Vector3.Zero, 0, false, false);
+                // mazePowerupsUUIDs[endPointPos[0], endPointPos[1]] = endPowerupInstance[0].UUID;
+                // endPowerupInstance[0].ResumeScripts();
+                // PowerUpModule.AddObject(endPowerupInstance[0].UUID, endPowerup.Name);
+
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[MazeMod] Error loading ball: " + e.Message);
+                m_log.WarnFormat("[MazeMod] Error loading powerups: " + e.Message);
             }
         }
 
@@ -566,19 +602,12 @@ namespace MazeModule
                 landmarkUUIDs = new UUID[map.GetLength(0), map.GetLength(1)];
                 foreach (Landmark landmark in landmarks)
                 {
-                    Console.WriteLine("111");
                     SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
-                    Console.WriteLine("222");
                     TaskInventoryItem item = controller.Inventory.GetInventoryItem("Flag");
-                    Console.WriteLine("333");
                     SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(mazeObjUUIDs[landmark.getStartPoint()[0], landmark.getStartPoint()[1]]);
-                    Console.WriteLine("444");
                     Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z * 1.2f);
-                    Console.WriteLine("555");
                     List<SceneObjectGroup> newLandmark = m_scene.RezObject(controller, item, spawnPos, null, Vector3.Zero, 0, false, false);
-                    Console.WriteLine("666");
                     newLandmark[0].ResumeScripts();
-                    Console.WriteLine("777");
                     LandmarkModule.addLandmark(newLandmark[0].UUID, landmark);
                     landmarkUUIDs[landmark.getStartPoint()[0], landmark.getStartPoint()[1]] = newLandmark[0].UUID;
                 }

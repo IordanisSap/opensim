@@ -74,7 +74,7 @@ move(integer x, integer y, integer z){
     target = llGetPos()+<2*x,2*y,-VERTICAL_DIFF>;
     movePlayer(<x,y,z>);
     llApplyImpulse(<2*x,2*y,-VERTICAL_DIFF> * llGetMass()*500, FALSE);
-    llMoveToTarget(llGetPos()+<2*x,2*y,-VERTICAL_DIFF>,llAbs(x+y+z)*1);
+    llMoveToTarget(llGetPos()+<2*x,2*y,-VERTICAL_DIFF>,llAbs(x+y+z)*0.5);
 }
 
 powerup(list commands){

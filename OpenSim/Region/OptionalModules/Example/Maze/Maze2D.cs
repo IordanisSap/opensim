@@ -225,7 +225,7 @@ public class MazeSolver
         {
             if (maze[x, 0] == 0)
             {
-                start = new int[] { x, 0};
+                start = new int[] { x, 0 };
             }
         }
         for (int x = 0; x < maze.GetLength(0); x++)
@@ -248,8 +248,8 @@ public class MazeSolver
     {
         bool flag = false;
         visited[x, y] = true;
-        if(maze[x,y] == 1) return false;
-        if(x == end[0] && y == end[1] || x == start[0] && y == start[1])
+        if (maze[x, y] == 1) return false;
+        if (x == end[0] && y == end[1] || x == start[0] && y == start[1])
         {
             flag = true;
         }
@@ -264,7 +264,7 @@ public class MazeSolver
 
             if (!visited[nx, ny])
             {
-                if(SolvePath(nx, ny)) flag = true;
+                if (SolvePath(nx, ny)) flag = true;
             }
         }
         if (flag) _path.Add(new int[] { x, y });
@@ -295,10 +295,13 @@ public class MazeSolver
 
     public void printPath()
     {
-        foreach(int[] i in _path)
+        Console.WriteLine();
+        foreach (int[] i in _path)
         {
-            Console.WriteLine(i[0] + ", " + i[1]);
+            Console.Write(i[0] + ", " + i[1] + " ");
         }
+        Console.WriteLine();
+
     }
 
     public List<int[]> getPath()
@@ -450,7 +453,7 @@ public class LandmarkCreator
         }
 
         if (landmarks.Count == 0) landmarks.Add(new Landmark(path[path.Count / 2]));
-        //landmarks.Add(new Landmark(path[path.Count - 1]));
+        landmarks.Add(new Landmark(path[path.Count - 1]));
     }
 
     public List<Landmark> getLandmarks()
@@ -520,11 +523,11 @@ public class LandmarkCreator
         List<int[]> pointsOfInterest = new List<int[]>();
         foreach (List<int[]> pi in pis)
         {
-            pointsOfInterest.Add(pi[pi.Count/2]);
+            pointsOfInterest.Add(pi[pi.Count / 2]);
         }
         foreach (List<int[]> sigma in sigmas)
         {
-            pointsOfInterest.Add(sigma[sigma.Count/2]);
+            pointsOfInterest.Add(sigma[sigma.Count / 2]);
         }
         return pointsOfInterest;
     }
