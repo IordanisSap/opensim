@@ -92,4 +92,15 @@ public class ObstacleModule
         Obstacle obstacle = actionMap[obstacleType];
         obstacle.OnCollision(player);
     }
+    public Obstacle GetObstacle(string obstacleName)
+    {
+        if (!actionMap.TryGetValue(obstacleName, out Obstacle obstacle)) return null;
+        return obstacle;
+    }
+    
+    public Obstacle GetObstacle(UUID obstacleUUID)
+    {
+        if (!objectMap.TryGetValue(obstacleUUID, out string obstacleName)) return null;
+        return GetObstacle(obstacleName);
+    }
 }

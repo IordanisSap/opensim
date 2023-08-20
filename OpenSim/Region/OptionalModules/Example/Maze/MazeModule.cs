@@ -199,7 +199,7 @@ namespace MazeModule
         {
             ObstacleModule.AddObstacle(
                 new Obstacle(
-                    "Spikes1",
+                    "Obstacle1",
                     delegate (Player player)
                     {
                         if (player.hasPowerUp("Shield")) { return; }
@@ -215,11 +215,25 @@ namespace MazeModule
                             if (array[0] == pos[0] && array[1] == pos[1]) inPath = true;
                         }
                         if (!inPath) Console.WriteLine("Spikes found not in path, pos: " + pos[0] + ", " + pos[1] + "");
-                        mazeSolver.printPath(); 
+                        mazeSolver.printPath();
                         if (!inPath) return true;
-                        foreach (int[] array in path)
+
+                        bool found = false;
+                        uint obstacleNum = 0;
+                        uint shieldNum = 0;
+                        for (int i = path.Count - 1; i >= 0; i--)
                         {
-                            if (array[0] == pos[0] && array[1] == pos[1]) return false;
+                            int[] array = path[i];
+                            if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") obstacleNum++;
+                            if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") shieldNum++;
+                            if (array[0] == pos[0] && array[1] == pos[1])
+                            {
+                                if (obstacleNum > shieldNum) return false;
+                                found = true;
+                                continue;
+                            }
+                            if (!found) continue;
+                            if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") return false;
                             if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") return true;
                         }
                         return false;
@@ -345,9 +359,9 @@ namespace MazeModule
 
             LoadEndPointObject(endPoint);
             createBall(startPoint);
+            createLandmarks(creator.getLandmarks(), mazeObjUUIDs);
             createPowerUps(mazeObjUUIDs, creator.getPointsOfInterest(), mazeSolver.getPath());
             createObstacles(mazeObjUUIDs);
-            createLandmarks(creator.getLandmarks(), mazeObjUUIDs);
 
             Vector3 pos = m_scene.GetSceneObjectPart(hostID).AbsolutePosition;
             createFloor(size * 2 + 1, pos - Vector3.UnitZ * 5);
@@ -407,7 +421,7 @@ namespace MazeModule
                 // TaskInventoryItem textureItem = m_scene.GetSceneObjectPart(getController()).Inventory.GetInventoryItem("Path_texture");
                 Primitive.TextureEntry texture = new Primitive.TextureEntry(UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f"));
                 Primitive.TextureEntryFace face = texture.CreateFace(0);
-                face.RGBA = new Color4(0.8f, 0.467f, 0.134f, 1f);
+                face.RGBA = new Color4(0.8f, 0.61f, 0.024f, 1f);
                 part.Shape.Textures.FaceTextures[0] = face;
 
                 SceneObjectGroup group = new SceneObjectGroup(part);
@@ -498,7 +512,7 @@ namespace MazeModule
         {
             try
             {
-                //ObstacleModule.AddAction("Spikes1", )
+                //ObstacleModule.AddAction("Obstacle1", )
                 mazeObstacleUUIDs = new UUID[map.GetLength(0), map.GetLength(1)];
                 for (int y = 2; y < map.GetLength(1) - 1; y++)
                 {
@@ -506,7 +520,7 @@ namespace MazeModule
                     {
                         if (map[x, y] != UUID.Zero)
                         {
-                            if (mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 1) != 0) continue;
+                            if (landmarkUUIDs[x, y] != UUID.Zero || mazePowerupsUUIDs[x, y] != UUID.Zero || mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 20) != 0) continue;
                             SceneObjectPart controller = m_scene.GetSceneObjectPart(getController());
                             Obstacle randomObstacle = ObstacleModule.GetRandomObstacle();
                             if (!ObstacleModule.CanPlaceObstacle(randomObstacle.Name, new int[2] { x, y })) continue;
@@ -561,7 +575,7 @@ namespace MazeModule
 
                             if (!isPointOfInterest)
                             {
-                                if (isInPath || (mazePowerupsUUIDs[x - 1, y] != UUID.Zero || mazePowerupsUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 20) != 0)) continue;
+                                if (landmarkUUIDs[x, y] != UUID.Zero || isInPath || (mazePowerupsUUIDs[x - 1, y] != UUID.Zero || mazePowerupsUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 20) != 0)) continue;
                             }
 
                             PowerUp randomPowerUp = PowerUpModule.GetRandomPowerUp();
