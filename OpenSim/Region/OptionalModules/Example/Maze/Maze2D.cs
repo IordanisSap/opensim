@@ -453,7 +453,7 @@ public class LandmarkCreator
         }
 
         if (landmarks.Count == 0) landmarks.Add(new Landmark(path[path.Count / 2]));
-        landmarks.Add(new Landmark(path[path.Count - 1]));
+        //landmarks.Add(new Landmark(path[path.Count - 1]));
     }
 
     public List<Landmark> getLandmarks()

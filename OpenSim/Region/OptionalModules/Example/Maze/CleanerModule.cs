@@ -1,0 +1,74 @@
+using OpenMetaverse;
+using OpenSim.Region.Framework.Scenes;
+using System.Collections.Generic;
+
+public class CleanerModule
+{
+
+    private List<UUID[,]> pathUUIDs = null;
+
+    private List<UUID[,]> obstacleUUIDs = null;
+
+    private List<UUID[,]> powerupUUIDs = null;
+
+    private List<UUID[,]> landmarkUUIDs = null;
+
+    private Scene m_scene;
+
+    public CleanerModule(Scene m_scene)
+    {
+        pathUUIDs = new List<UUID[,]>();
+        obstacleUUIDs = new List<UUID[,]>();
+        powerupUUIDs = new List<UUID[,]>();
+        landmarkUUIDs = new List<UUID[,]>();
+        this.m_scene = m_scene;
+    }
+
+    public void AddPath(UUID[,] pathUUIDs)
+    {
+        this.pathUUIDs.Add(pathUUIDs);
+    }
+
+    public void AddObstacles(UUID[,] obstacleUUIDs)
+    {
+        this.obstacleUUIDs.Add(obstacleUUIDs);
+    }
+
+    public void AddPowerups(UUID[,] powerupUUIDs)
+    {
+        this.powerupUUIDs.Add(powerupUUIDs);
+    }
+
+    public void AddLandmarks(UUID[,] landmarkUUIDs)
+    {
+        this.landmarkUUIDs.Add(landmarkUUIDs);
+    }
+
+    public void reset()
+    {
+        for (int level = 0; level < pathUUIDs.Count; level++)
+        {
+            for (int y = 0; y < pathUUIDs[level].GetLength(1); y++)
+            {
+                for (int x = 0; x < pathUUIDs[level].GetLength(0); x++)
+                {
+                    if (pathUUIDs[level][x, y] != null)
+                    {
+                        SceneObjectGroup obj = m_scene.GetSceneObjectGroup(pathUUIDs[level][x, y]);
+                        if (obj != null) m_scene.DeleteSceneObject(obj, false);
+
+                        SceneObjectGroup obj2 = m_scene.GetSceneObjectGroup(obstacleUUIDs[level][x, y]);
+                        if (obj2 != null) m_scene.DeleteSceneObject(obj2, false);
+
+                        SceneObjectGroup obj3 = m_scene.GetSceneObjectGroup(powerupUUIDs[level][x, y]);
+                        if (obj3 != null) m_scene.DeleteSceneObject(obj3, false);
+
+                        SceneObjectGroup obj4 = m_scene.GetSceneObjectGroup(landmarkUUIDs[level][x, y]);
+                        if (obj4 != null) m_scene.DeleteSceneObject(obj4, false);
+                    }
+                }
+            }
+        }
+    }
+
+}

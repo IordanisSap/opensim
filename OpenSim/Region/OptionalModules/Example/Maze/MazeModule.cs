@@ -72,6 +72,7 @@ namespace MazeModule
 
         private LandmarkModule LandmarkModule = null;
         private AttachmentModule AttachmentModule = null;
+        private CleanerModule CleanerModule = null;
         private UUID mazeBallUUID = UUID.Zero;
         public bool isOwner(UUID avatarID)
         {
@@ -280,6 +281,7 @@ namespace MazeModule
                 m_worldComm = m_scene.RequestModuleInterface<IWorldComm>();
                 AttachmentModule = new AttachmentModule(m_scene);
                 LandmarkModule = new LandmarkModule(m_scene);
+                CleanerModule = new CleanerModule(m_scene);
                 landOwnerUUID = scene.RegionInfo.EstateSettings.EstateOwner;
                 if (m_comms == null)
                 {
@@ -288,8 +290,7 @@ namespace MazeModule
                     return;
                 }
 
-                m_comms.RegisterScriptInvocation(this, "generateMaze2D");
-                m_comms.RegisterScriptInvocation(this, "generateMaze3D");
+                m_comms.RegisterScriptInvocation(this, "generateMaze");
                 m_comms.RegisterScriptInvocation(this, "getStartPoint");
                 m_comms.RegisterScriptInvocation(this, "getEndPoint");
                 m_comms.RegisterScriptInvocation(this, "generateTestCube");
@@ -342,20 +343,15 @@ namespace MazeModule
 
         #region ScriptInvocationInteface
 
-        public void generateMaze2D(UUID hostID, UUID scriptID, int size)
+        public void generateMaze(UUID hostID, UUID scriptID, int size, Vector3 start)
         {
             Maze2D maze = new Maze2D(size, size);
-            Console.WriteLine("Generating:\n");
             maze.printMaze();
             int[,] binaryMaze = new BinaryMaze2D(maze.getCells()).getCells();
             mazeSolver = new MazeSolver(binaryMaze);
             mazeSolver.Solve();
             LandmarkCreator creator = new LandmarkCreator(mazeSolver.getPath());
-            creator.printShapes();
-            creator.printPointsOfInterest();
-
-
-            generatePath(binaryMaze, size);
+            generatePath(binaryMaze, size, start);
 
             LoadEndPointObject(endPoint);
             createBall(startPoint);
@@ -363,18 +359,34 @@ namespace MazeModule
             createPowerUps(mazeObjUUIDs, creator.getPointsOfInterest(), mazeSolver.getPath());
             createObstacles(mazeObjUUIDs);
 
-            Vector3 pos = m_scene.GetSceneObjectPart(hostID).AbsolutePosition;
-            createFloor(size * 2 + 1, pos - Vector3.UnitZ * 5);
+            createFloor(size * 2 + 1, start - Vector3.UnitZ * 5);
             m_log.WarnFormat("[MazeMod] Generating maze: " + size.ToString());
-
         }
 
-        private void generatePath(in int[,] binaryMaze, int size)
+        public void generateLevel(UUID hostID, UUID scriptID, int size, Vector3 start)
+        {
+            Maze2D maze = new Maze2D(size, size);
+            maze.printMaze();
+            int[,] binaryMaze = new BinaryMaze2D(maze.getCells()).getCells();
+            mazeSolver = new MazeSolver(binaryMaze);
+            mazeSolver.Solve();
+            LandmarkCreator creator = new LandmarkCreator(mazeSolver.getPath());
+            generatePath(binaryMaze, size, start);
+
+            LoadEndPointObject(endPoint);
+            createLandmarks(creator.getLandmarks(), mazeObjUUIDs);
+            createPowerUps(mazeObjUUIDs, creator.getPointsOfInterest(), mazeSolver.getPath());
+            createObstacles(mazeObjUUIDs);
+            //createFloor(size * 2 + 1, start - Vector3.UnitZ * 5);
+            m_log.WarnFormat("[MazeMod] Generating maze: " + size.ToString());
+        }
+
+
+        private void generatePath(in int[,] binaryMaze, int size, Vector3 pos)
         {
 
             mazeObjUUIDs = new UUID[size * 2 + 1, size * 2 + 1];
             UUID hostID = getController();
-            Vector3 pos = m_scene.GetSceneObjectPart(hostID).AbsolutePosition;
 
 
             for (int y = 0; y < size * 2 + 1; y++)
@@ -408,6 +420,7 @@ namespace MazeModule
                     endPointPos = new int[2] { x, size * 2 };
                 }
             }
+            CleanerModule.AddPath(mazeObjUUIDs);
         }
 
         public UUID generateCube(UUID hostID, Vector3 pos)
@@ -534,6 +547,7 @@ namespace MazeModule
                         }
                     }
                 }
+                CleanerModule.AddObstacles(mazeObstacleUUIDs);
             }
             catch (Exception e)
             {
@@ -593,14 +607,17 @@ namespace MazeModule
                         }
                     }
                 }
-                // PowerUp endPowerup = PowerUpModule.getPowerUp("Jump");
-                // TaskInventoryItem endPowerupInvItem = controller.Inventory.GetInventoryItem(endPowerup.Name);
-                // SceneObjectPart endPointInstance = m_scene.GetSceneObjectPart(endPoint);
-                // Vector3 endPos = endPointInstance.AbsolutePosition + new Vector3(0, 0, endPointInstance.Scale.Z * 1.15f);
-                // List<SceneObjectGroup> endPowerupInstance = m_scene.RezObject(controller, endPowerupInvItem, endPos, null, Vector3.Zero, 0, false, false);
-                // mazePowerupsUUIDs[endPointPos[0], endPointPos[1]] = endPowerupInstance[0].UUID;
-                // endPowerupInstance[0].ResumeScripts();
-                // PowerUpModule.AddObject(endPowerupInstance[0].UUID, endPowerup.Name);
+                PowerUp endPowerup = PowerUpModule.getPowerUp("Jump");
+                TaskInventoryItem endPowerupInvItem = controller.Inventory.GetInventoryItem(endPowerup.Name);
+                SceneObjectPart endPointInstance = m_scene.GetSceneObjectPart(endPoint);
+                Vector3 endPos = endPointInstance.AbsolutePosition + new Vector3(0, 0, endPointInstance.Scale.Z * 1.15f);
+                List<SceneObjectGroup> endPowerupInstance = m_scene.RezObject(controller, endPowerupInvItem, endPos, null, Vector3.Zero, 0, false, false);
+                mazePowerupsUUIDs[endPointPos[0], endPointPos[1]] = endPowerupInstance[0].UUID;
+                endPowerupInstance[0].ResumeScripts();
+                PowerUpModule.AddObject(endPowerupInstance[0].UUID, endPowerup.Name);
+
+                CleanerModule.AddPowerups(mazePowerupsUUIDs);
+
 
             }
             catch (Exception e)
@@ -625,6 +642,7 @@ namespace MazeModule
                     LandmarkModule.addLandmark(newLandmark[0].UUID, landmark);
                     landmarkUUIDs[landmark.getStartPoint()[0], landmark.getStartPoint()[1]] = newLandmark[0].UUID;
                 }
+                CleanerModule.AddLandmarks(landmarkUUIDs);
             }
             catch (Exception e)
             {
@@ -646,29 +664,7 @@ namespace MazeModule
         {
             try
             {
-                m_log.WarnFormat("[MazeMod] Deleting maze2");
-                if (mazeObjUUIDs == null) return;
-                m_log.WarnFormat("[MazeMod] Deleting maze");
-                for (int y = 0; y < mazeObjUUIDs.GetLength(1); y++)
-                {
-                    for (int x = 0; x < mazeObjUUIDs.GetLength(0); x++)
-                    {
-                        if (mazeObjUUIDs[x, y] != null)
-                        {
-                            SceneObjectGroup obj = m_scene.GetSceneObjectGroup(mazeObjUUIDs[x, y]);
-                            if (obj != null) m_scene.DeleteSceneObject(obj, false);
-
-                            SceneObjectGroup obj2 = m_scene.GetSceneObjectGroup(mazeObstacleUUIDs[x, y]);
-                            if (obj2 != null) m_scene.DeleteSceneObject(obj2, false);
-
-                            SceneObjectGroup obj3 = m_scene.GetSceneObjectGroup(mazePowerupsUUIDs[x, y]);
-                            if (obj3 != null) m_scene.DeleteSceneObject(obj3, false);
-
-                            SceneObjectGroup obj4 = m_scene.GetSceneObjectGroup(landmarkUUIDs[x, y]);
-                            if (obj4 != null) m_scene.DeleteSceneObject(obj4, false);
-                        }
-                    }
-                }
+                CleanerModule.reset();
                 SceneObjectGroup ball = m_scene.GetSceneObjectGroup(mazeBallUUID);
                 if (ball != null) m_scene.DeleteSceneObject(ball, false);
                 SceneObjectGroup floor = m_scene.GetSceneObjectGroup(floorUUID);
@@ -783,16 +779,19 @@ namespace MazeModule
             m_log.WarnFormat("[MazeMod] Ball collided with endpoint");
             Player p = getPlayer(player);
             if (p == null) return 0;
-            SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
-            playerObj.ScriptSetPhantomStatus(true);
-            playerObj.ScriptSetPhysicsStatus(false);
-            Primitive.TextureEntry texture = playerObj.RootPart.Shape.Textures;
-            Primitive.TextureEntryFace face = texture.CreateFace(0);
-            face.Glow = 0.3f;
-            face.RGBA = new Color4(0, 0.5f, 1f, 0.3f);
-            texture.FaceTextures[0] = face;
-            playerObj.TeleportObject(player, playerObj.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
-            playerObj.RootPart.UpdateTextureEntry(texture);
+            // SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
+            // playerObj.ScriptSetPhantomStatus(true);
+            // playerObj.ScriptSetPhysicsStatus(false);
+            // Primitive.TextureEntry texture = playerObj.RootPart.Shape.Textures;
+            // Primitive.TextureEntryFace face = texture.CreateFace(0);
+            // face.Glow = 0.3f;
+            // face.RGBA = new Color4(0, 0.5f, 1f, 0.3f);
+            // texture.FaceTextures[0] = face;
+            // playerObj.TeleportObject(player, playerObj.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
+            // playerObj.RootPart.UpdateTextureEntry(texture);
+            SceneObjectPart endPointObj = m_scene.GetSceneObjectPart(endPoint);
+            if (endPointObj == null) return 0;
+            generateLevel(UUID.Zero, UUID.Zero, Convert.ToInt32(Math.Round(mazeObjUUIDs.GetLength(0) * 1.5)), endPointObj.AbsolutePosition + new Vector3(0, 0, 10));
             return 1;
 
         }
@@ -826,29 +825,6 @@ namespace MazeModule
                 p.Reset();
                 AttachmentModule.Reset();
             }
-        }
-
-        public void generateMaze3D(UUID hostID, UUID scriptID, int size)
-        {
-            // Maze3D maze = new Maze3D(size, size, size);
-            // Vector3 pos = m_scene.GetSceneObjectPart(hostID).AbsolutePosition;
-            // Console.WriteLine("Generating:\n");
-            // maze.printMaze();
-            // int[,,] binaryMaze = maze.getMaze();
-            // for (int z = 0; z < size; z++)
-            // {
-            //     for (int y = 0; y < size * 2 + 1; y++)
-            //     {
-            //         for (int x = 0; x < size * 2 + 1; x++)
-            //         {
-            //             if (binaryMaze[x, y, z] == 1)
-            //             {
-            //                 generateCube(hostID, scriptID, pos + new Vector3(8 * x, 8 * y, 8 * z));
-            //             }
-            //         }
-            //     }
-            // }
-            m_log.WarnFormat("[MazeMod] Generating maze: " + size.ToString());
         }
         #endregion
     }

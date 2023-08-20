@@ -49,6 +49,7 @@ default
                 PSYS_SRC_ACCEL, <0.0, 0.0, 1.0>,
                 PSYS_SRC_OMEGA, <0.0, 0.0, 1.0>
             ]);
+            llSetScriptState(llGetScriptName(),FALSE);
         }
 
     }
