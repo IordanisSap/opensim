@@ -3,7 +3,7 @@ default
 {
     state_entry()
     {
-        generateMaze(3, llGetPos());
+        generateMaze(30, llGetPos());
         llSetTimerEvent(350);
     }
     timer()

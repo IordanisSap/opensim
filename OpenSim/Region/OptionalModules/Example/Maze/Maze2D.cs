@@ -9,7 +9,7 @@ public class Maze2D
     private Cell[,] _cells;
     private Random _random = new Random();
 
-    public Maze2D(int width, int height)
+    public Maze2D(int width, int height, int defStartX = -1, int defEndX = -1)
     {
         _width = width;
         _height = height;
@@ -22,12 +22,11 @@ public class Maze2D
             }
         }
         // Choose a random cell to start from
-        int startX = _random.Next(width);
-        int endX = _random.Next(width);
-
+        int startX = defStartX != -1 ? defStartX : _random.Next(width);
+        int endX = defEndX != -1 ? defEndX : _random.Next(width);
         _cells[startX, 0].TopWall = false;
         _cells[endX, height - 1].BottomWall = false;
-        GenerateMazeRecursive(startX, _random.Next(height));
+        GenerateMazeRecursive(startX, 0);
     }
     public void GenerateMazeRecursive(int x, int y)
     {
@@ -161,7 +160,6 @@ public class BinaryMaze2D
                 }
             }
 
-            Console.WriteLine("Maze");
             for (int y = 0; y < _height; y++)
 
             {
@@ -171,7 +169,6 @@ public class BinaryMaze2D
                     _cells[x * 2 + 1, y * 2] = cells[x, y].TopWall ? 1 : 0;
                     _cells[x * 2 + 1, y * 2 + 1] = 0;
                 }
-                Console.WriteLine();
             }
             for (int x = 0; x < _width; x++)
             {
@@ -235,8 +232,6 @@ public class MazeSolver
                 end = new int[] { x, maze.GetLength(1) - 1 };
             }
         }
-        Console.WriteLine("Start: " + start[0] + ", " + start[1]);
-        Console.WriteLine("End: " + end[0] + ", " + end[1]);
     }
     public void Solve()
     {
@@ -382,19 +377,15 @@ public class LandmarkCreator
 
         for (int i = 0; i < path.Count; i++)
         {
-            Console.Write("[" + path[i][0] + ", " + path[i][1] + "] ");
             int firstHorizontalPoint = getNextHorizontalPoint(i);
             if (firstHorizontalPoint != FAIL)
             {
-                //Console.Write("firstHorizontalPoint");
                 int secondVerticalPoint = getNextVerticalPoint(firstHorizontalPoint);
                 if (secondVerticalPoint != FAIL)
                 {
-                    //Console.Write("secondVerticalPoint");
                     int thirdHorizontalPoint = getNextHorizontalPoint(secondVerticalPoint);
                     if (thirdHorizontalPoint != FAIL)
                     {
-                        //Console.Write("thirdHorizontalPoint");
                         if (path[i][0] == path[i + 6][0] || path[i][1] == path[i + 6][1]) pis.Add(new List<int[]> { path[i], path[i + 1], path[i + 2], path[i + 3], path[i + 4], path[i + 5], path[i + 6] });
                         else sigmas.Add(new List<int[]> { path[i], path[i + 1], path[i + 2], path[i + 3], path[i + 4], path[i + 5], path[i + 6] });
                         if (!OVERLAP) i += 6;

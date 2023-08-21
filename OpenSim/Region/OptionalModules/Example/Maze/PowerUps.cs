@@ -77,6 +77,7 @@ public class PowerUpModule
     private Dictionary<UUID, string> objectMap;
     private Dictionary<string, PowerUp> actionMap;
 
+    private List<string> specialPowerups = new List<string>();
     private Random random = new Random();
 
     public PowerUpModule()
@@ -93,7 +94,18 @@ public class PowerUpModule
         }
         int randomIndex = random.Next(0, actionMap.Count);
         PowerUp randomPowerUp = actionMap.ElementAt(randomIndex).Value;
+        if (specialPowerups.Contains(randomPowerUp.Name))
+        {
+            return GetRandomPowerUp();
+        }
         return randomPowerUp;
+    }
+    private PowerUp GetNotRandomPowerUp(){
+        PowerUp p = getPowerUp("Random");
+        while(p.Name == "Random"){
+            p = GetRandomPowerUp();
+        }
+        return p;
     }
     public void AddPowerUp(PowerUp powerUp)
     {
@@ -104,10 +116,19 @@ public class PowerUpModule
         objectMap.Add(uuid, powerUpName);
     }
 
+    public void RegisterSpecialPowerUp(string powerUp)
+    {
+        specialPowerups.Add(powerUp);
+    }
+
     public PowerUp AddPowerUp(UUID powerUpUUID, Player player)
     {
         if (!objectMap.TryGetValue(powerUpUUID, out string powerUpName)) return null;
         PowerUp powerUp = actionMap[powerUpName];
+        if (powerUp.Name == "Random")
+        {
+            powerUp = GetNotRandomPowerUp();
+        }
         player.AddPowerUp(powerUp);
         return powerUp;
     }
