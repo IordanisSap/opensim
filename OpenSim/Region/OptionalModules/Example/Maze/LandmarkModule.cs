@@ -57,6 +57,17 @@ class LandmarkModule
         return landmarkMap[landmarkUUID];
     }
 
+    public UUID getNextLandmark(UUID landmarkUUID)
+    {
+        int index = landmarkOrder.IndexOf(landmarkUUID);
+        if (index == -1)
+            return UUID.Zero;
+        index++;
+        if (index >= landmarkOrder.Count)
+            return UUID.Zero;
+        return landmarkOrder[index];
+    }
+
     public UUID getPlayerLandmark(UUID player)
     {
         return playerLandmark[player];

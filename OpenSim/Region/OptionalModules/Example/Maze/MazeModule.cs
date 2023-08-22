@@ -56,6 +56,8 @@ namespace MazeModule
 
         private UUID[,] landmarkUUIDs = null;
 
+        private UUID[,] placedPathUUIDs = null;
+
         private UUID floorUUID = UUID.Zero;
         private Random random = new Random();
 
@@ -154,8 +156,7 @@ namespace MazeModule
                     15000,
                     delegate (Player player, object[] data)
                     {
-                        SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
-                        playerObj.TeleportObject(player.getUUID(), playerObj.AbsolutePosition + new Vector3(0, 0, 5), Quaternion.Identity, 1);
+
                     },
                     delegate (Player player, object[] data)
                     {
@@ -169,7 +170,9 @@ namespace MazeModule
                     100,
                     delegate (Player player, object[] data)
                     {
-                        buildPath(player, (string)data[0], Convert.ToInt32(data[1]));
+                        //buildPath(player, (string)data[0], Convert.ToInt32(data[1]));
+                        buildPath(player, (string)data[0], 1);
+
                     },
                     delegate (Player player, object[] data)
                     {
@@ -184,6 +187,13 @@ namespace MazeModule
                     delegate (Player player, object[] data)
                     {
                         //buildPath(player, (string)data[0], Convert.ToInt32(data[1]));
+                        SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
+                        UUID nextLandmark = LandmarkModule.getNextLandmark(LandmarkModule.getPlayerLandmark(player.getUUID()));
+                        SceneObjectPart nextLandmarkInstance = m_scene.GetSceneObjectPart(nextLandmark);
+                        playerObj.RootPart.ParentGroup.MoveToTarget(nextLandmarkInstance.AbsolutePosition - new Vector3(0, 0, nextLandmarkInstance.Scale.Z * 2), 0.5f);
+                        playerObj.TeleportObject(player.getUUID(), nextLandmarkInstance.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
+                        player.AddToPath(LandmarkModule.getLandmark(nextLandmark).getStartPoint());
+
                     },
                     delegate (Player player, object[] data)
                     {
@@ -356,6 +366,8 @@ namespace MazeModule
                 createPowerUps(mazeObjUUIDs, creator.getPointsOfInterest(), mazeSolver.getPath());
                 createObstacles(mazeObjUUIDs);
 
+                placedPathUUIDs = new UUID[size * 2 + 1, size * 2 + 1];
+                CleanerModule.AddPlacedPath(placedPathUUIDs);
                 createFloor(256, new Vector3(128, 128, getController().AbsolutePosition.Z - getController().Scale.Z - 2f));
                 m_log.WarnFormat("[MazeMod] Generating maze: " + size.ToString());
             }
@@ -379,6 +391,8 @@ namespace MazeModule
             createLandmarks(creator.getLandmarks(), mazeObjUUIDs);
             createPowerUps(mazeObjUUIDs, creator.getPointsOfInterest(), mazeSolver.getPath());
             createObstacles(mazeObjUUIDs);
+            placedPathUUIDs = new UUID[size * 2 + 1, size * 2 + 1];
+            CleanerModule.AddPlacedPath(placedPathUUIDs);
             m_log.WarnFormat("[MazeMod] Generating maze: " + size.ToString());
         }
 
@@ -685,14 +699,22 @@ namespace MazeModule
             if (p == null) return;
             if (p.GetLastPos()[0] < 0 || p.GetLastPos()[0] > mazeObjUUIDs.GetLength(0)) return;
             if (p.GetLastPos()[1] < 0 || p.GetLastPos()[1] > mazeObjUUIDs.GetLength(1)) return;
-            Vector3 pos = m_scene.GetSceneObjectPart(mazeObjUUIDs[p.GetLastPos()[0], p.GetLastPos()[1]]).AbsolutePosition;
+            int[] pos = new int[2] { p.GetLastPos()[0], p.GetLastPos()[1] };
             for (int i = 0; i < length; i++)
             {
-                if (direction == "front") pos += new Vector3(0, objScale, 0);
-                else if (direction == "back") pos += new Vector3(0, -objScale, 0);
-                else if (direction == "right") pos += new Vector3(objScale, 0, 0);
-                else if (direction == "left") pos += new Vector3(-objScale, 0, 0);
-                generateCube(p.getUUID(), pos);
+                if (direction == "front") pos[1] += 1;
+                else if (direction == "back") pos[1] -= 1;
+                else if (direction == "right") pos[0] += 1;
+                else if (direction == "left") pos[0] -= 1;
+                Console.WriteLine("111:"+ p.GetLastPos()[0] + " " + p.GetLastPos()[1]);
+                Vector3 instancePos = m_scene.GetSceneObjectPart(mazeObjUUIDs[p.GetLastPos()[0], p.GetLastPos()[1]]).AbsolutePosition;
+                Console.WriteLine("222");
+                if (pos[0] - p.GetLastPos()[0] != 0) instancePos.X += objScale * (pos[0] - p.GetLastPos()[0]);
+                else if (pos[1] - p.GetLastPos()[1] != 0) instancePos.Y += objScale * (pos[1] - p.GetLastPos()[1]);
+                Console.WriteLine("333");
+                placedPathUUIDs[pos[0], pos[1]] = generateCube(p.getUUID(), instancePos);
+                Console.WriteLine("444");
+
             }
         }
 

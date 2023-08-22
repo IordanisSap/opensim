@@ -1,8 +1,5 @@
 float Velocity = 12.0; //meters / second.
 integer listen_handle;
-list powerups = ["Shield_powerup"];
-integer powerup_duration = 8;
-float current_powerup_timestamp = 0;
 vector target = ZERO_VECTOR;
 
 
@@ -41,7 +38,7 @@ default
 
 
 parse_message(string input){
-    list commands = llParseString2List(removeWhitespaces(input),[";"],[""]);
+    list commands = llParseString2List(llToLower(removeWhitespaces(input)),[";"],[""]);
     integer size = llGetListLength(commands);
     for (integer i = 0; i < size; i++){
         list command = parse_single(llList2String(commands, i));
@@ -53,19 +50,19 @@ parse_message(string input){
 
 translate_command(list command)
 {
-    if (llList2String(command,0) == "moveRight"){
+    if (llList2String(command,0) == "moveright"){
         move(llList2Integer(command,1), 0, 0);
     }
-    else if (llList2String(command,0) == "moveLeft"){
+    else if (llList2String(command,0) == "moveleft"){
         move(-llList2Integer(command,1), 0, 0);
     }
-    else if (llList2String(command,0) == "moveBack"){
+    else if (llList2String(command,0) == "moveback"){
         move(0, -llList2Integer(command,1), 0);
     }
-    else if (llList2String(command,0) == "moveForward"){
+    else if (llList2String(command,0) == "moveforward"){
         move(0, llList2Integer(command,1), 0);
     }
-    else if (llList2String(command,0) == "consumePowerup"){
+    else if (llList2String(command,0) == "consumepowerup"){
         powerup(command);
     }
 }
@@ -81,6 +78,7 @@ powerup(list commands){
     list args = llDeleteSubList(commands, 0, 1);
     llOwnerSay("Given args to powerup: "+ llList2String(args,0));
     llOwnerSay("Given args to powerup: "+ llList2String(args,1));
-    consumePowerUp(llList2String(commands,1), args);
+    string formattedCommand = llToUpper(llGetSubString(llList2String(commands,1), 0, 0)) + llDeleteSubString(llList2String(commands,1), 0, 0);
+    consumePowerUp(formattedCommand, args);
 }
 
