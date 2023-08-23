@@ -166,7 +166,7 @@ namespace MazeModule
             );
             PowerUpModule.AddPowerUp(
                 new PowerUp(
-                    "Builder",
+                    "Build",
                     100,
                     delegate (Player player, object[] data)
                     {
@@ -307,7 +307,7 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "landMarkCollision");
                 m_comms.RegisterScriptInvocation(this, "endPointCollision");
                 m_comms.RegisterScriptInvocation(this, "movePlayer");
-                m_comms.RegisterScriptInvocation(this, "consumePowerUp");
+                m_comms.RegisterScriptInvocation(this, "activatePowerUp");
                 m_comms.RegisterScriptInvocation(this, "getPowerUps");
 
 
@@ -706,15 +706,10 @@ namespace MazeModule
                 else if (direction == "back") pos[1] -= 1;
                 else if (direction == "right") pos[0] += 1;
                 else if (direction == "left") pos[0] -= 1;
-                Console.WriteLine("111:"+ p.GetLastPos()[0] + " " + p.GetLastPos()[1]);
                 Vector3 instancePos = m_scene.GetSceneObjectPart(mazeObjUUIDs[p.GetLastPos()[0], p.GetLastPos()[1]]).AbsolutePosition;
-                Console.WriteLine("222");
                 if (pos[0] - p.GetLastPos()[0] != 0) instancePos.X += objScale * (pos[0] - p.GetLastPos()[0]);
                 else if (pos[1] - p.GetLastPos()[1] != 0) instancePos.Y += objScale * (pos[1] - p.GetLastPos()[1]);
-                Console.WriteLine("333");
                 placedPathUUIDs[pos[0], pos[1]] = generateCube(p.getUUID(), instancePos);
-                Console.WriteLine("444");
-
             }
         }
 
@@ -753,7 +748,7 @@ namespace MazeModule
             }
         }
 
-        public void consumePowerUp(UUID hostID, UUID scriptID, string powerup, object[] args)
+        public void activatePowerUp(UUID hostID, UUID scriptID, string powerup, object[] args)
         {
             try
             {

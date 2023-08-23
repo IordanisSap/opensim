@@ -412,16 +412,8 @@ public class LandmarkCreator
 
     private void createLandmarks()
     {
-        const int FACTOR = 4;
-        // List<List<int[]>> landMarkLines = lines.GetRange(0, lines.Count / 2);
-        // foreach (List<int[]> line in landMarkLines)
-        // {
-        //     if (line.Count > 1)
-        //     {
-        //         int[] midPoint = line[line.Count / 2];
-        //         landmarks.Add(new Landmark(midPoint));
-        //     }
-        // }
+        const int FACTOR = 5;
+        const int MIN_DISTANCE = 12;
         int totalLandMarks = lines.Count / FACTOR;
         landmarks.Add(new Landmark(path[0]));
         for (int i = 0; i < totalLandMarks; i += 1)
@@ -435,16 +427,36 @@ public class LandmarkCreator
                     maxLine = line;
                 }
             }
-            if (maxLine.Count > 1 && maxLine.Count > 2)
+            if (maxLine.Count > 2)
             {
                 int[] midPoint = maxLine[maxLine.Count / 2];
                 if (midPoint[0] == path[0][0]) continue;
+                if (pathDist(landmarks[landmarks.Count - 1].getStartPoint(), midPoint) < MIN_DISTANCE) continue;
                 landmarks.Add(new Landmark(midPoint));
             }
         }
 
         if (landmarks.Count == 0) landmarks.Add(new Landmark(path[path.Count / 2]));
         //landmarks.Add(new Landmark(path[path.Count - 1]));
+    }
+
+    private int pathDist(int[] start, int[] end)
+    {
+        int dist = 0;
+        bool found = false;
+        foreach (int[] point in path)
+        {
+            if (found) dist++;
+            if (point[0] == start[0] && point[1] == start[1])
+            {
+                found = true;
+            }
+            if (point[0] == end[0] && point[1] == end[1])
+            {
+                break;
+            }
+        }
+        return dist;
     }
 
     public List<Landmark> getLandmarks()
@@ -468,6 +480,7 @@ public class LandmarkCreator
             Console.WriteLine();
         }
     }
+
     public void printShapes()
     {
         Console.WriteLine();

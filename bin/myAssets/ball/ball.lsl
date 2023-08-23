@@ -62,7 +62,7 @@ translate_command(list command)
     else if (llList2String(command,0) == "moveforward"){
         move(0, llList2Integer(command,1), 0);
     }
-    else if (llList2String(command,0) == "consumepowerup"){
+    else if (llList2String(command,0) == "activatepowerup"){
         powerup(command);
     }
 }
@@ -79,6 +79,6 @@ powerup(list commands){
     llOwnerSay("Given args to powerup: "+ llList2String(args,0));
     llOwnerSay("Given args to powerup: "+ llList2String(args,1));
     string formattedCommand = llToUpper(llGetSubString(llList2String(commands,1), 0, 0)) + llDeleteSubString(llList2String(commands,1), 0, 0);
-    consumePowerUp(formattedCommand, args);
+    activatePowerUp(formattedCommand, args);
 }
 

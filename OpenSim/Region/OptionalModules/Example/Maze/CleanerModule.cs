@@ -33,7 +33,7 @@ public class CleanerModule
 
     private List<UUID[,]> landmarkUUIDs = null;
 
-    private List<UUID[,]>  placedPathUUIDs = null;
+    private List<UUID[,]> placedPathUUIDs = null;
 
     private Scene m_scene;
 
@@ -100,6 +100,11 @@ public class CleanerModule
                 }
             }
         }
+        pathUUIDs.Clear();
+        obstacleUUIDs.Clear();
+        powerupUUIDs.Clear();
+        landmarkUUIDs.Clear();
+        placedPathUUIDs.Clear();
     }
 
 }
