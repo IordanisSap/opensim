@@ -1,7 +1,9 @@
 float Velocity = 12.0; //meters / second.
 integer listen_handle;
-vector target = ZERO_VECTOR;
+integer listen_handle2;
 
+vector target = ZERO_VECTOR;
+integer channel = -13572468;
 
 #include "ball/parsing.lsl"
 #include "ball/physics.lsl"
@@ -15,17 +17,19 @@ default
         llSetStatus(STATUS_PHYSICS, TRUE);
         reset_texture();
 
-        listen_handle = llListen(0, "", "", "");
-
+        listen_handle = llListen(channel, "", "", "");
+        listen_handle2 = llListen(0, "", "", "");
         llSetTimerEvent(MOVE_DECAY_FREQ);
 
         vector startPos = llGetPos();
         llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
+        llTextBox(getAvatar(), "Commands", channel);
 
     }
     listen( integer channel, string name, key id, string message )
     {
         parse_message(message);
+        llTextBox(id, "Commands", channel);
     }
     timer()
     {
@@ -36,6 +40,12 @@ default
     {
         llResetScript();
         llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
+        llTextBox(getAvatar(), "Commands", channel);
+
+    }
+    touch_start(integer num_detected)
+    {
+        llTextBox(llDetectedKey(0), "Commands", channel);
     }
 }
 

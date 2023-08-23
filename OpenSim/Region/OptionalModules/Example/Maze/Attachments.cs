@@ -62,13 +62,14 @@ public class AttachmentModule
         }
     }
 
-    public void attachToPlayer(Player player, string powerUpName)
+    public void attachToPlayer(Player player, string powerUpName, UUID avatar)
     {
         try
         {
             SceneObjectPart playerObj = m_scene.GetSceneObjectPart(player.getUUID());
-            ScenePresence objOwner = m_scene.GetScenePresence(playerObj.OwnerID);
+            ScenePresence objOwner = m_scene.GetScenePresence(avatar);
             SceneObjectPart HUDobj = m_scene.GetSceneObjectPart(getHUDContainer());
+            Console.WriteLine(objOwner.Name);
             float displayOffset = -0.5f;
             if (objOwner != null)
             {
@@ -77,8 +78,10 @@ public class AttachmentModule
                 if (powerUp == null) return;
                 List<SceneObjectGroup> newPowerup = m_scene.RezObject(HUDobj, powerUp, objOwner.AbsolutePosition, null, Vector3.Zero, 0, false, false);
                 newPowerup[0].ResumeScripts();
+                newPowerup[0].SetOwnerId(avatar);
                 attachmentsModule.AttachObject(objOwner, newPowerup[0], (uint)AttachmentPoint.HUDBottomLeft, false, false, true);
                 newPowerup[0].UpdateGroupPosition(new Vector3(0f, displayOffset, 0.07f));
+                Console.WriteLine("Success:"+ objOwner.UUID +",  " + newPowerup[0].OwnerID);
                 if (displayPowerUps.ContainsKey(player))
                 {
                     displayPowerUps[player].Add(new PowerUpAttachment(powerUpName, newPowerup[0].UUID));

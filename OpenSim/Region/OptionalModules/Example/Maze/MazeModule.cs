@@ -46,7 +46,7 @@ namespace MazeModule
         private int[] startPointPos = new int[2] { 0, 0 };
         private UUID endPoint = UUID.Zero;
         private int[] endPointPos = new int[2] { 0, 0 };
-
+        private UUID avatarPlayer = UUID.Zero;
         private string mazeControllerName = "MazeController";
         private SceneObjectPart mazeController = null;
 
@@ -312,7 +312,7 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "activatePowerUp");
                 m_comms.RegisterScriptInvocation(this, "getPowerUps");
                 m_comms.RegisterScriptInvocation(this, "mazeHasStarted");
-
+                m_comms.RegisterScriptInvocation(this, "getAvatar");
 
                 // Register some constants as well
                 // m_comms.RegisterConstant("ModConstantInt1", 25);
@@ -351,10 +351,11 @@ namespace MazeModule
 
         #region ScriptInvocationInteface
 
-        public void generateMaze(UUID hostID, UUID scriptID, int size, Vector3 start)
+        public void generateMaze(UUID hostID, UUID scriptID, int size, Vector3 start, UUID avatar)
         {
             try
             {
+                avatarPlayer = avatar;
                 Maze2D maze = new Maze2D(size, size);
                 maze.printMaze();
                 int[,] binaryMaze = new BinaryMaze2D(maze.getCells()).getCells();
@@ -506,6 +507,12 @@ namespace MazeModule
         {
             return (startPoint != UUID.Zero) ? 1 : 0;
         }
+
+        public UUID getAvatar(UUID hostID, UUID scriptID)
+        {
+            return avatarPlayer;
+        }
+
         private void LoadEndPointObject(UUID objectUUID)
         {
             try
@@ -733,7 +740,7 @@ namespace MazeModule
             Player p = getPlayer(player);
             if (p == null) return 0;
             PowerUp powerUp = PowerUpModule.AddPowerUp(hostID, p);
-            AttachmentModule.attachToPlayer(p, powerUp.Name);
+            AttachmentModule.attachToPlayer(p, powerUp.Name, avatarPlayer);
             return 1;
         }
 
