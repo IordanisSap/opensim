@@ -3,8 +3,7 @@ default
 {
     state_entry()
     {
-        generateMaze(4, llGetPos());
-        llSetTimerEvent(350);
+        llSetTimerEvent(600);
     }
     timer()
     {
@@ -12,8 +11,9 @@ default
     }
     touch(integer num_detected)
     {
-        llOwnerSay("Resetting maze");
-        resetMaze();
+        if (mazeHasStarted())
+            return;
+        generateMaze(4, llGetPos()-<20,-3,3>);
     }
 }
 

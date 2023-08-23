@@ -33,6 +33,8 @@ namespace MazeModule
         private bool m_enabled = true;
         private Scene m_scene = null;
         const float PI = 3.1415f;
+
+        private Vector3 START_OFFSET = new Vector3(-20, 3, -3);
         private IScriptModuleComms m_comms;
         private IWorldComm m_worldComm;
         private UUID landOwnerUUID = UUID.Zero;
@@ -309,6 +311,7 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "movePlayer");
                 m_comms.RegisterScriptInvocation(this, "activatePowerUp");
                 m_comms.RegisterScriptInvocation(this, "getPowerUps");
+                m_comms.RegisterScriptInvocation(this, "mazeHasStarted");
 
 
                 // Register some constants as well
@@ -444,8 +447,6 @@ namespace MazeModule
                 SceneObjectPart obj = m_scene.GetSceneObjectPart(hostID);
                 OpenMetaverse.UUID owner = obj.OwnerID;
                 SceneObjectPart part = new SceneObjectPart(hostID, PrimitiveBaseShape.CreateBox(), pos, Quaternion.Identity, Vector3.Zero);
-                // Get the texture entry of the cube
-                // TaskInventoryItem textureItem = getController().Inventory.GetInventoryItem("Path_texture");
                 Primitive.TextureEntry texture = new Primitive.TextureEntry(UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f"));
                 Primitive.TextureEntryFace face = texture.CreateFace(0);
                 face.RGBA = new Color4(0.8f, 0.61f, 0.024f, 1f);
@@ -499,6 +500,11 @@ namespace MazeModule
         public UUID getEndPoint(UUID hostID, UUID scriptID)
         {
             return endPoint;
+        }
+
+        public int mazeHasStarted(UUID hostID, UUID scriptID)
+        {
+            return (startPoint != UUID.Zero) ? 1 : 0;
         }
         private void LoadEndPointObject(UUID objectUUID)
         {
@@ -811,7 +817,7 @@ namespace MazeModule
 
             Vector3 newStartPointPos = endPointObj.AbsolutePosition + new Vector3(0, 0, 4);
             newStartPointPos.Y = endPointObj.AbsolutePosition.Y + objScale;
-            newStartPointPos.X = startPointObj.AbsolutePosition.X;
+            newStartPointPos.X = startPointObj.AbsolutePosition.X + START_OFFSET.X;
             generateLevel(UUID.Zero, UUID.Zero, Convert.ToInt32(Math.Round(mazeObjUUIDs.GetLength(0) * 0.75f)), newStartPointPos);
             return 1;
 
@@ -846,6 +852,8 @@ namespace MazeModule
                 p.Reset();
                 AttachmentModule.Reset();
             }
+            startPoint = UUID.Zero;
+            endPoint = UUID.Zero;
         }
         #endregion
     }

@@ -19,7 +19,9 @@ default
 
         llSetTimerEvent(MOVE_DECAY_FREQ);
 
-        llCollisionFilter("", NULL_KEY, FALSE);
+        vector startPos = llGetPos();
+        llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
+
     }
     listen( integer channel, string name, key id, string message )
     {
@@ -33,6 +35,7 @@ default
     on_rez(integer start_param)
     {
         llResetScript();
+        llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
     }
 }
 
