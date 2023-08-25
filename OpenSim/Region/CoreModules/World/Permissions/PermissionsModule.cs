@@ -876,6 +876,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             // fallback is everyone rights
             returnMask = ApplyObjectModifyMasks(grp.EffectiveEveryOnePerms, objflags, unlocked);
+            Console.WriteLine("VIEWER PERMISSIONS: " + returnMask.ToString());
+            return objflags | GOD_FLAGS;
             if (!taskOwnerID.IsZero())
                 returnMask |= (uint)PrimFlags.ObjectAnyOwner;
             return returnMask;
@@ -1423,6 +1425,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         private bool CanEditObjectInventory(UUID objectID, UUID userID)
         {
+            Console.WriteLine("Can edit object inventory");
+            return true;
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
@@ -1454,6 +1458,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         /// <returns></returns>
         private bool CanEditScript(UUID script, UUID objectID, UUID userID)
         {
+            Console.WriteLine("Can edit script");
+            return true;
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 

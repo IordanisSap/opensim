@@ -12,7 +12,6 @@ default
 {
     state_entry()
     {
-        llOwnerSay(llGetMass());
         llSleep(1.0);
         llSetStatus(STATUS_PHYSICS, TRUE);
         reset_texture();
@@ -23,13 +22,11 @@ default
 
         vector startPos = llGetPos();
         llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
-        llTextBox(getAvatar(), "Commands", channel);
 
     }
     listen( integer channel, string name, key id, string message )
     {
         parse_message(message);
-        llTextBox(id, "Commands", channel);
     }
     timer()
     {
@@ -42,10 +39,6 @@ default
         llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
         llTextBox(getAvatar(), "Commands", channel);
 
-    }
-    touch_start(integer num_detected)
-    {
-        llTextBox(llDetectedKey(0), "Commands", channel);
     }
 }
 
@@ -89,8 +82,6 @@ move(integer x, integer y, integer z){
 
 powerup(list commands){
     list args = llDeleteSubList(commands, 0, 1);
-    llOwnerSay("Given args to powerup: "+ llList2String(args,0));
-    llOwnerSay("Given args to powerup: "+ llList2String(args,1));
     string formattedCommand = llToUpper(llGetSubString(llList2String(commands,1), 0, 0)) + llDeleteSubString(llList2String(commands,1), 0, 0);
     activatePowerUp(formattedCommand, args);
 }

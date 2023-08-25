@@ -513,6 +513,8 @@ namespace MazeModule
             return avatarPlayer;
         }
 
+
+
         private void LoadEndPointObject(UUID objectUUID)
         {
             try
@@ -541,6 +543,24 @@ namespace MazeModule
                 mazeBallUUID = newBall[0].UUID;
                 newBall[0].ResumeScripts();
                 players.Add(new Player(newBall[0].UUID, "player" + players.Count.ToString(), startPointPos));
+
+                //Add commands script
+                TaskInventoryItem commands = controller.Inventory.GetInventoryItem("Commands");
+                newBall[0].RootPart.ScriptAccessPin = 123;
+                m_scene.RezScriptFromPrim(commands.ItemID, controller, mazeBallUUID, 123, 1, 0);
+
+                TaskInventoryItem commandsScript = newBall[0].RootPart.Inventory.GetInventoryItem("Commands");
+                commandsScript.OwnerID = avatarPlayer;
+                newBall[0].InvalidateEffectivePerms();
+                newBall[0].RootPart.ScheduleFullUpdate();
+
+
+                //ScenePresence avatarObj = m_scene.GetScenePresence(avatarPlayer);
+                //m_scene.Permissions.GenerateClientFlags(newBall[0].RootPart, avatarObj);
+                //newBall[0].UpdatePermissions(avatarPlayer, 2, 0, 0, 0);
+                //if (m_scene.TryGetClient(avatarPlayer, out IClientAPI client)) newBall[0].SendPropertiesToClient(client);
+                // avatarObj.SendFullUpdateToClient(avatarObj.ControllingClient);
+
             }
             catch (Exception e)
             {
@@ -662,7 +682,7 @@ namespace MazeModule
                     SceneObjectPart controller = getController();
                     TaskInventoryItem item = controller.Inventory.GetInventoryItem("Flag");
                     SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(mazeObjUUIDs[landmark.getStartPoint()[0], landmark.getStartPoint()[1]]);
-                    Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z * 1.2f);
+                    Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z);
                     List<SceneObjectGroup> newLandmark = m_scene.RezObject(controller, item, spawnPos, null, Vector3.Zero, 0, false, false);
                     newLandmark[0].ResumeScripts();
                     LandmarkModule.addLandmark(newLandmark[0].UUID, landmark);
