@@ -1,22 +1,15 @@
-float MOVE_DECAY_RATE = 0.25;
-float MOVE_DECAY_FREQ = 0.15;
-float MOVE_DECAY_THRESHOLD = 0.2;
+float MOVE_CHECK_FREQ = 0.05;
+float MOVE_CHECK_THRESHOLD = 0.15;
 
-float VERTICAL_DIFF = 20;
 
-move_decay(vector target){
-    vector speed = llGetVel();
+move_check(vector target){
     vector currPos = llGetPos();
-    currPos.z = currPos.z - VERTICAL_DIFF;
-    if (llVecDist(currPos, target) < 0.001) return;
-    float speedFactor = llVecDist(speed, <0,0,0>);
-    if (speedFactor < 1) speedFactor = 1;
-    if (llVecDist(target, currPos) < 0.2 * speedFactor){
-        llSetVelocity(<0,0,speed.z>, FALSE);
-    }
-    if (llVecDist(target, currPos) < 0.4){
+    if (llVecDist(llGetVel(),<0,0,0>)==0){return;}
+    if (llVecDist(target, currPos) < MOVE_CHECK_THRESHOLD){
+        llSetVelocity(<0,0,0>, FALSE);
         llSetStatus(STATUS_PHYSICS, FALSE);
-        llSetPos(target + <0,0,VERTICAL_DIFF>);
+        llSetPos(target);
         llSetStatus(STATUS_PHYSICS, TRUE);
     }
 }
+

@@ -5,6 +5,9 @@ integer listen_handle2;
 vector target = ZERO_VECTOR;
 integer channel = -13572468;
 
+
+integer MOVEMENT_START;
+
 #include "ball/parsing.lsl"
 #include "ball/physics.lsl"
 #include "ball/texture_animations.lsl"
@@ -18,10 +21,9 @@ default
 
         listen_handle = llListen(channel, "", "", "");
         listen_handle2 = llListen(0, "", "", "");
-        llSetTimerEvent(MOVE_DECAY_FREQ);
+        llSetTimerEvent(MOVE_CHECK_FREQ);
 
         vector startPos = llGetPos();
-        llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
 
     }
     listen( integer channel, string name, key id, string message )
@@ -30,15 +32,12 @@ default
     }
     timer()
     {
-        move_decay(target);
+        move_check(target);
         list powerUps = getPowerUps(llGetKey());
     }
     on_rez(integer start_param)
     {
         llResetScript();
-        llMoveToTarget(llGetPos()+<0,0,-VERTICAL_DIFF>, 0.5);
-        llTextBox(getAvatar(), "Commands", channel);
-
     }
 }
 
@@ -71,13 +70,21 @@ translate_command(list command)
     else if (llList2String(command,0) == "activatepowerup"){
         powerup(command);
     }
+    else if (llList2String(command,0) == "sleep"){
+        llSleep(llList2Integer(command,1));
+    }
 }
 
 move(integer x, integer y, integer z){
-    target = llGetPos()+<2*x,2*y,-VERTICAL_DIFF>;
+    target = llGetPos()+<2*x,2*y,0>;
     movePlayer(<x,y,z>);
-    llApplyImpulse(<2*x,2*y,-VERTICAL_DIFF> * llGetMass()*500, FALSE);
-    llMoveToTarget(llGetPos()+<2*x,2*y,-VERTICAL_DIFF>,llAbs(x+y+z)*0.5);
+    float speed  = 2.05;
+    if (x > 0) llSetVelocity(<speed,0,0>, FALSE);
+    else if (y > 0) llSetVelocity(<0,speed,0>, FALSE);
+    else if (x < 0) llSetVelocity(<-speed,0,0>, FALSE);
+    else if (y < 0) llSetVelocity(<0,-speed,0>, FALSE);
+    else llSetVelocity(<0,0,0>, FALSE);
+    MOVEMENT_START = llGetUnixTime();
 }
 
 powerup(list commands){

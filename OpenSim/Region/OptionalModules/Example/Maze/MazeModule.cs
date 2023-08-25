@@ -192,8 +192,9 @@ namespace MazeModule
                         SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
                         UUID nextLandmark = LandmarkModule.getNextLandmark(LandmarkModule.getPlayerLandmark(player.getUUID()));
                         SceneObjectPart nextLandmarkInstance = m_scene.GetSceneObjectPart(nextLandmark);
-                        playerObj.RootPart.ParentGroup.MoveToTarget(nextLandmarkInstance.AbsolutePosition - new Vector3(0, 0, nextLandmarkInstance.Scale.Z * 2), 0.5f);
+                        //playerObj.RootPart.ParentGroup.MoveToTarget(nextLandmarkInstance.AbsolutePosition - new Vector3(0, 0, nextLandmarkInstance.Scale.Z * 2), 0.5f);
                         playerObj.TeleportObject(player.getUUID(), nextLandmarkInstance.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
+                        playerObj.RootPart.SetVelocity(new Vector3(0, 0, 0), true);
                         player.AddToPath(LandmarkModule.getLandmark(nextLandmark).getStartPoint());
 
                     },
@@ -339,7 +340,8 @@ namespace MazeModule
                 p.AddToPath(landmark.getStartPoint());
                 SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
                 playerObj.TeleportObject(playerObj.UUID, checkPointInstance.AbsolutePosition + new Vector3(0, 0, objScale), Quaternion.Identity, 1);
-                playerObj.RootPart.ParentGroup.MoveToTarget(checkPointInstance.AbsolutePosition - new Vector3(0, 0, checkPointInstance.Scale.Z * 2), 0.5f);
+                playerObj.RootPart.SetVelocity(new Vector3(0, 0, 0), true);
+                //playerObj.RootPart.ParentGroup.MoveToTarget(checkPointInstance.AbsolutePosition - new Vector3(0, 0, checkPointInstance.Scale.Z * 2), 0.5f);
             }
             catch (Exception e)
             {
