@@ -32,12 +32,14 @@ default
     }
     timer()
     {
-        move_check(target);
+        MOVE_CHECK(target);
         list powerUps = getPowerUps(llGetKey());
     }
     on_rez(integer start_param)
     {
         llResetScript();
+        llTextBox(getAvatar(), "Commands", channel);
+
     }
 }
 
@@ -70,21 +72,18 @@ translate_command(list command)
     else if (llList2String(command,0) == "activatepowerup"){
         powerup(command);
     }
-    else if (llList2String(command,0) == "sleep"){
-        llSleep(llList2Integer(command,1));
-    }
 }
 
 move(integer x, integer y, integer z){
     target = llGetPos()+<2*x,2*y,0>;
     movePlayer(<x,y,z>);
-    float speed  = 2.05;
-    if (x > 0) llSetVelocity(<speed,0,0>, FALSE);
-    else if (y > 0) llSetVelocity(<0,speed,0>, FALSE);
-    else if (x < 0) llSetVelocity(<-speed,0,0>, FALSE);
-    else if (y < 0) llSetVelocity(<0,-speed,0>, FALSE);
+    if (x > 0) llSetVelocity(<2,0,0>, FALSE);
+    else if (y > 0) llSetVelocity(<0,2,0>, FALSE);
+    else if (x < 0) llSetVelocity(<-2,0,0>, FALSE);
+    else if (y < 0) llSetVelocity(<0,-2,0>, FALSE);
     else llSetVelocity(<0,0,0>, FALSE);
     MOVEMENT_START = llGetUnixTime();
+    llOwnerSay("START: " + (string)MOVEMENT_START);
 }
 
 powerup(list commands){

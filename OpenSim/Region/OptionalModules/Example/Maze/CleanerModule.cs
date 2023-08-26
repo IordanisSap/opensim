@@ -35,6 +35,7 @@ public class CleanerModule
 
     private List<UUID[,]> placedPathUUIDs = null;
 
+    private List<UUID> items = null;
     private Scene m_scene;
 
     public CleanerModule(Scene m_scene)
@@ -44,6 +45,7 @@ public class CleanerModule
         powerupUUIDs = new List<UUID[,]>();
         landmarkUUIDs = new List<UUID[,]>();
         placedPathUUIDs = new List<UUID[,]>();
+        items = new List<UUID>();
         this.m_scene = m_scene;
     }
 
@@ -70,6 +72,11 @@ public class CleanerModule
     public void AddPlacedPath(UUID[,] placedPathUUID)
     {
         this.placedPathUUIDs.Add(placedPathUUID);
+    }
+
+    public void AddItem(UUID item)
+    {
+        items.Add(item);
     }
 
     public void reset()
@@ -99,6 +106,11 @@ public class CleanerModule
                     }
                 }
             }
+        }
+        foreach (UUID item in items)
+        {
+            SceneObjectGroup obj = m_scene.GetSceneObjectGroup(item);
+            if (obj != null) m_scene.DeleteSceneObject(obj, false);
         }
         pathUUIDs.Clear();
         obstacleUUIDs.Clear();

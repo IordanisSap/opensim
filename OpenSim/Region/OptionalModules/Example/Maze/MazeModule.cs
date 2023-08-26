@@ -188,7 +188,6 @@ namespace MazeModule
                     100,
                     delegate (Player player, object[] data)
                     {
-                        //buildPath(player, (string)data[0], Convert.ToInt32(data[1]));
                         SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player.getUUID());
                         UUID nextLandmark = LandmarkModule.getNextLandmark(LandmarkModule.getPlayerLandmark(player.getUUID()));
                         SceneObjectPart nextLandmarkInstance = m_scene.GetSceneObjectPart(nextLandmark);
@@ -310,10 +309,18 @@ namespace MazeModule
                 m_comms.RegisterScriptInvocation(this, "landMarkCollision");
                 m_comms.RegisterScriptInvocation(this, "endPointCollision");
                 m_comms.RegisterScriptInvocation(this, "movePlayer");
-                m_comms.RegisterScriptInvocation(this, "activatePowerUp");
                 m_comms.RegisterScriptInvocation(this, "getPowerUps");
                 m_comms.RegisterScriptInvocation(this, "mazeHasStarted");
                 m_comms.RegisterScriptInvocation(this, "getAvatar");
+
+
+                m_comms.RegisterScriptInvocation(this, "move_fwd");
+                m_comms.RegisterScriptInvocation(this, "move_back");
+                m_comms.RegisterScriptInvocation(this, "move_left");
+                m_comms.RegisterScriptInvocation(this, "move_right");
+
+                m_comms.RegisterScriptInvocation(this, "activate_powerup");
+
 
                 // Register some constants as well
                 // m_comms.RegisterConstant("ModConstantInt1", 25);
@@ -338,10 +345,22 @@ namespace MazeModule
                 SceneObjectPart checkPointInstance = m_scene.GetSceneObjectPart(checkPoint);
                 if (checkPointInstance == null) return;
                 p.AddToPath(landmark.getStartPoint());
+
+                List<string> toDeleteTimers = new List<string> { "move", "powerup" };
+                foreach (KeyValuePair<string, Timer> timer in timerDictionary)
+                {
+                    if (timer.Key.Contains(p.getUUID().ToString()) && toDeleteTimers.Find(name => timer.Key.Contains(name)) != null)
+                    {
+                        timer.Value.Dispose();
+                        timerDictionary.Remove(timer.Key);
+                    }
+                }
+
                 SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
                 playerObj.TeleportObject(playerObj.UUID, checkPointInstance.AbsolutePosition + new Vector3(0, 0, objScale), Quaternion.Identity, 1);
                 playerObj.RootPart.SetVelocity(new Vector3(0, 0, 0), true);
                 //playerObj.RootPart.ParentGroup.MoveToTarget(checkPointInstance.AbsolutePosition - new Vector3(0, 0, checkPointInstance.Scale.Z * 2), 0.5f);
+
             }
             catch (Exception e)
             {
@@ -450,8 +469,11 @@ namespace MazeModule
                 SceneObjectPart obj = m_scene.GetSceneObjectPart(hostID);
                 OpenMetaverse.UUID owner = obj.OwnerID;
                 SceneObjectPart part = new SceneObjectPart(hostID, PrimitiveBaseShape.CreateBox(), pos, Quaternion.Identity, Vector3.Zero);
-                Primitive.TextureEntry texture = new Primitive.TextureEntry(UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f"));
+                TaskInventoryItem textureItem = getController().Inventory.GetInventoryItem("path_texture");
+                Primitive.TextureEntry texture = new Primitive.TextureEntry(textureItem.AssetID);
                 Primitive.TextureEntryFace face = texture.CreateFace(0);
+
+
                 face.RGBA = new Color4(0.8f, 0.61f, 0.024f, 1f);
                 part.Shape.Textures.FaceTextures[0] = face;
 
@@ -544,7 +566,12 @@ namespace MazeModule
                 List<SceneObjectGroup> newBall = m_scene.RezObject(controller, item, startPointObj.AbsolutePosition, null, Vector3.Zero, 0, false, false);
                 mazeBallUUID = newBall[0].UUID;
                 newBall[0].ResumeScripts();
-                players.Add(new Player(newBall[0].UUID, "player" + players.Count.ToString(), startPointPos));
+                Player newPlayer = new Player(newBall[0].UUID, "player" + players.Count.ToString(), startPointPos);
+                players.Add(newPlayer);
+
+                //Create axes
+                createAxisBall(newBall[0]);
+                createAxisAttachment(avatarPlayer);
 
                 //Add commands script
                 TaskInventoryItem commands = controller.Inventory.GetInventoryItem("Commands");
@@ -568,6 +595,63 @@ namespace MazeModule
             {
                 m_log.WarnFormat("[MazeMod] Error loading ball: " + e.Message);
             }
+        }
+
+        private void createAxisBall(SceneObjectGroup ball)
+        {
+            SceneObjectPart controller = getController();
+            if (ball == null || controller == null) return;
+            TaskInventoryItem item = controller.Inventory.GetInventoryItem("Axis");
+            if (item == null) return;
+            List<SceneObjectGroup> newBallAxis = m_scene.RezObject(controller, item, ball.AbsolutePosition + new Vector3(0, 0, 3), null, Vector3.Zero, 0, false, false);
+            newBallAxis[0].ResumeScripts();
+
+            CleanerModule.AddItem(newBallAxis[0].UUID);
+            string timerId = "ballAxisTimer" + ball.UUID.ToString();
+            Timer ballAxisTimer = new Timer(delegate (object state)
+            {
+                SceneObjectGroup ax = m_scene.GetSceneObjectGroup(newBallAxis[0].UUID);
+                if (ax == null)
+                {
+                    timerDictionary[timerId].Dispose();
+                    timerDictionary.Remove(timerId);
+                    return;
+                }
+                // Rotate opposite of cameraRotation
+
+                ax.TeleportObject(ax.UUID, ball.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
+            }, null, 0, 80);
+            timerDictionary.Add(timerId, ballAxisTimer);
+        }
+
+        private void createAxisAttachment(UUID avatar)
+        {
+            SceneObjectPart controller = getController();
+            ScenePresence player = m_scene.GetScenePresence(avatar);
+            if (player == null || controller == null) return;
+            TaskInventoryItem item = controller.Inventory.GetInventoryItem("HUDAxis");
+            if (item == null) return;
+            List<SceneObjectGroup> newAttachment = m_scene.RezObject(controller, item, player.AbsolutePosition, null, Vector3.Zero, 0, false, false);
+            newAttachment[0].ResumeScripts();
+            newAttachment[0].SetOwnerId(player.UUID);
+            AttachmentModule.attachToPlayer(player, newAttachment[0].RootPart, new Vector3(0f, -0.2f, 0.15f));
+
+            string timerId = "axisRotationTimer" + player.UUID.ToString();
+            Timer axisRotationTimer = new Timer(delegate (object state)
+            {
+                SceneObjectGroup attachment = m_scene.GetSceneObjectGroup(newAttachment[0].UUID);
+                if (attachment == null)
+                {
+                    timerDictionary[timerId].Dispose();
+                    timerDictionary.Remove(timerId);
+                    return;
+                }
+                Quaternion cameraRotation = player.CameraRotation;
+                // Rotate opposite of cameraRotation
+
+                attachment.RootPart.UpdateRotation(Quaternion.Inverse(cameraRotation));
+            }, null, 0, 100);
+            timerDictionary.Add(timerId, axisRotationTimer);
         }
 
         private void createObstacles(UUID[,] map)
@@ -737,7 +821,7 @@ namespace MazeModule
             int[] pos = new int[2] { p.GetLastPos()[0], p.GetLastPos()[1] };
             for (int i = 0; i < length; i++)
             {
-                if (direction == "front") pos[1] += 1;
+                if (direction == "forward") pos[1] += 1;
                 else if (direction == "back") pos[1] -= 1;
                 else if (direction == "right") pos[0] += 1;
                 else if (direction == "left") pos[0] -= 1;
@@ -783,15 +867,16 @@ namespace MazeModule
             }
         }
 
-        public void activatePowerUp(UUID hostID, UUID scriptID, string powerup, object[] args)
+        public void activate_powerup(UUID hostID, UUID scriptID, string powerup, object[] args)
         {
             try
             {
                 Player p = getPlayer(hostID);
                 if (p == null) return;
                 PowerUp activatedPowerup = p.ActivatePowerUp(powerup, args);
+                if (activatedPowerup == null) return;
                 AttachmentModule.removeAttachment(p, powerup);
-                string timerId = p.getUUID().ToString() + powerup;
+                string timerId = p.getUUID().ToString() + "powerup" + powerup;
 
                 if (timerDictionary.ContainsKey(timerId))
                 {
@@ -854,11 +939,60 @@ namespace MazeModule
 
         public void movePlayer(UUID hostID, UUID scriptID, Vector3 dist)
         {
-            Player p = getPlayer(hostID);
-            if (p == null) return;
-            int[] newMove = new int[2] { p.GetLastPos()[0] + (int)dist.X, p.GetLastPos()[1] + (int)dist.Y };
-            p.AddToPath(newMove);
-            m_log.WarnFormat("[MazeMod] Player moved, last pos " + p.GetLastPos()[0] + ", " + p.GetLastPos()[1]);
+            try
+            {
+                Console.WriteLine("Called movePlayer with " + dist.ToString());
+                if (dist.X == 0 && dist.Y == 0 && dist.Z == 0) return;
+                Player p = getPlayer(hostID);
+                if (p == null) return;
+                int[] newMove = new int[2] { p.GetLastPos()[0] + (int)dist.X, p.GetLastPos()[1] + (int)dist.Y };
+                p.AddToPath(newMove);
+
+                SceneObjectPart playerObj = m_scene.GetSceneObjectPart(hostID);
+                Vector3 target = playerObj.AbsolutePosition + new Vector3(dist.X * objScale, dist.Y * objScale, 0);
+                float speed = objScale * 1.04f;
+                Vector3 directionVector = new Vector3(dist.X != 0 ? Math.Sign(dist.X) : 0, dist.Y != 0 ? Math.Sign(dist.Y) : 0, 0);
+                Vector3 moveVector = directionVector * speed;
+                int MOVE_CHECK_INTERVAL = 50;
+                float MOVE_CHECK_THRESHOLD = 0.15f;
+
+                playerObj.SetVelocity(moveVector, false);
+                playerObj.UpdateAngularVelocity(directionVector * PI);
+
+                Console.WriteLine("Moving player toooooooooooooo " + target.ToString());
+                string timerId = p.getUUID().ToString() + "move";
+                Timer timer = new Timer((object state) =>
+                {
+                    Console.WriteLine("Checking player position");
+                    if (Vector3.Distance(playerObj.AbsolutePosition, target) < MOVE_CHECK_THRESHOLD)
+                    {
+                        playerObj.SetVelocity(Vector3.Zero, false);
+                        playerObj.ParentGroup.UpdateGroupPosition(target);
+
+                        if (timerDictionary.ContainsKey(timerId))
+                        {
+                            Timer timerToRemove = timerDictionary[timerId];
+                            timerToRemove.Dispose();
+                            timerDictionary.Remove(timerId);
+                            Console.WriteLine(timerDictionary.Count.ToString());
+                        }
+                    }
+                    else if (playerObj.Velocity == Vector3.Zero)
+                    {
+                        Console.WriteLine("Setting velocity: " + moveVector.ToString());
+                        playerObj.SetVelocity(moveVector, false);
+                    }
+                }, null, MOVE_CHECK_INTERVAL, MOVE_CHECK_INTERVAL);
+
+                timerDictionary.Add(timerId, timer);
+
+
+                m_log.WarnFormat("[MazeMod] Player moved, last pos " + p.GetLastPos()[0] + ", " + p.GetLastPos()[1]);
+            }
+            catch (Exception e)
+            {
+                m_log.WarnFormat("[MazeMod] Error moving player: " + e.Message);
+            }
         }
 
         public object[] getPowerUps(UUID hostID, UUID scriptID, UUID playerID)
@@ -881,9 +1015,40 @@ namespace MazeModule
                 p.Reset();
                 AttachmentModule.Reset();
             }
+            foreach (Timer timer in timerDictionary.Values)
+            {
+
+                timer.Dispose();
+            }
+            timerDictionary.Clear();
             startPoint = UUID.Zero;
             endPoint = UUID.Zero;
         }
+
+
+
+
+
+        public void move_fwd(UUID hostID, UUID scriptID, int dist)
+        {
+            movePlayer(hostID, scriptID, new Vector3(0, dist, 0));
+        }
+
+        public void move_back(UUID hostID, UUID scriptID, int dist)
+        {
+            movePlayer(hostID, scriptID, new Vector3(0, -dist, 0));
+        }
+
+        public void move_left(UUID hostID, UUID scriptID, int dist)
+        {
+            movePlayer(hostID, scriptID, new Vector3(-dist, 0, 0));
+        }
+
+        public void move_right(UUID hostID, UUID scriptID, int dist)
+        {
+            movePlayer(hostID, scriptID, new Vector3(dist, 0, 0));
+        }
+
         #endregion
     }
 }

@@ -29,6 +29,7 @@ public class AttachmentModule
 
     private Dictionary<Player, List<PowerUpAttachment>> displayPowerUps = new Dictionary<Player, List<PowerUpAttachment>>();
 
+    private Dictionary<UUID, UUID> avatarAttachments = new Dictionary<UUID, UUID>();
     private class PowerUpAttachment
     {
         public string powerUpName;
@@ -81,7 +82,7 @@ public class AttachmentModule
                 newPowerup[0].SetOwnerId(avatar);
                 attachmentsModule.AttachObject(objOwner, newPowerup[0], (uint)AttachmentPoint.HUDBottomLeft, false, false, true);
                 newPowerup[0].UpdateGroupPosition(new Vector3(0f, displayOffset, 0.07f));
-                Console.WriteLine("Success:"+ objOwner.UUID +",  " + newPowerup[0].OwnerID);
+                Console.WriteLine("Success:" + objOwner.UUID + ",  " + newPowerup[0].OwnerID);
                 if (displayPowerUps.ContainsKey(player))
                 {
                     displayPowerUps[player].Add(new PowerUpAttachment(powerUpName, newPowerup[0].UUID));
@@ -119,13 +120,23 @@ public class AttachmentModule
                 break;
             }
         }
-        for (int i = powerUps.Count - 1; i >= flag; i--){
+        for (int i = powerUps.Count - 1; i >= flag; i--)
+        {
             SceneObjectPart toMovePowerUp = m_scene.GetSceneObjectPart(powerUps[i].powerUpUUID);
             toMovePowerUp.ParentGroup.UpdateGroupPosition(toMovePowerUp.AttachedPos + new Vector3(0f, 0.1f, 0f));
         }
     }
 
-    public void Reset(){
+    public void attachToPlayer(ScenePresence player, SceneObjectPart item, Vector3 pos)
+    {
+        attachmentsModule.AttachObject(player, item.ParentGroup, (uint)AttachmentPoint.HUDBottomLeft, false, false, true);
+        item.UpdateGroupPosition(pos);
+        avatarAttachments.Add(player.UUID, item.UUID);
+    }
+
+    
+    public void Reset()
+    {
         foreach (KeyValuePair<Player, List<PowerUpAttachment>> entry in displayPowerUps)
         {
             foreach (PowerUpAttachment powerUp in entry.Value)
@@ -140,6 +151,15 @@ public class AttachmentModule
             entry.Value.Clear();
         }
         displayPowerUps.Clear();
+        foreach (KeyValuePair<UUID, UUID> entry in avatarAttachments)
+        {
+            SceneObjectPart toRemovePowerUp = m_scene.GetSceneObjectPart(entry.Value);
+            if (toRemovePowerUp != null)
+            {
+                toRemovePowerUp.ParentGroup.DetachToGround();
+                toRemovePowerUp.ParentGroup.DeleteGroupFromScene(false);
+            }
+        }
+        avatarAttachments.Clear();
     }
-
 }
