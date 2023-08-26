@@ -950,7 +950,7 @@ namespace MazeModule
 
                 SceneObjectPart playerObj = m_scene.GetSceneObjectPart(hostID);
                 Vector3 target = playerObj.AbsolutePosition + new Vector3(dist.X * objScale, dist.Y * objScale, 0);
-                float speed = objScale * 1.04f;
+                float speed = objScale * 1.05f;
                 Vector3 directionVector = new Vector3(dist.X != 0 ? Math.Sign(dist.X) : 0, dist.Y != 0 ? Math.Sign(dist.Y) : 0, 0);
                 Vector3 moveVector = directionVector * speed;
                 int MOVE_CHECK_INTERVAL = 50;

@@ -1,32 +1,26 @@
 
 command(){
     // Commands start here.
-    move_fwd(3);
-    sleep(3);
+    move_fwd(4);
+    sleep(4);
+    build_fwd();
+    move_fwd(2);
+    sleep(2);
     move_right(2);
     sleep(2);
-    move_fwd(4);
-    sleep(4);
-    move_left(2);
-    sleep(2);
-    move_back(2);
-    sleep(2);
-    move_fwd(4);
-    activate_powerup("Shield",[]);
-    sleep(4);
-    move_fwd(3);
-    sleep(3);
+    move_fwd(1);
+
     //activate_powerup("Jump",[]);
 
-    //build_fwd();
     //activate_powerup("Build",["front"]);
     // Commands end here.
  }
  
  example_command(){
     move_fwd(2);  
-    activate_powerup("build",["forward"]);
- }
+    sleep(2);
+    build_fwd();
+}
  
  
  
@@ -55,6 +49,21 @@ build_right(){
 
 build_back(){
     activate_powerup("Build",["back"]);
+}
+
+integer powerup_num(string searchPowerup){
+    list powerups = getPowerUps(llGetKey());
+    integer count = 0;
+    integer totalPowerups = llGetListLength(powerups);
+    for (integer i = 0; i < totalPowerups; i++)
+    {
+        string powerup = llList2String(powerups, i);
+        if (powerup == searchPowerup)
+        {
+            count++;
+        }
+    }
+    return count;
 }
 
  default
