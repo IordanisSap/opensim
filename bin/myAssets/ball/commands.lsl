@@ -1,12 +1,11 @@
 
 command(){
     // Commands start here.
-    move_fwd(4);
-    sleep(4);
-    build_fwd();
-    move_fwd(2);
-    sleep(2);
+    move_fwd(1);
+    sleep(1);
     move_right(2);
+    sleep(2);
+    move_fwd(2);
     sleep(2);
     move_fwd(1);
 

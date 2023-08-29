@@ -411,7 +411,8 @@ namespace MazeModule
             mazeSolver.Solve();
             LandmarkCreator creator = new LandmarkCreator(mazeSolver.getPath());
             generatePath(binaryMaze, size, start);
-
+            CleanerModule.AddItem(generateCube(hostID, m_scene.GetSceneObjectPart(startPoint).AbsolutePosition - new Vector3(0,0,objScale), objScale));
+            Console.WriteLine("STARTING POSITIONNNNN " + m_scene.GetSceneObjectPart(startPoint).AbsolutePosition);
             LoadEndPointObject(endPoint);
             createLandmarks(creator.getLandmarks(), mazeObjUUIDs);
             createPowerUps(mazeObjUUIDs, creator.getPointsOfInterest(), mazeSolver.getPath());
@@ -462,7 +463,7 @@ namespace MazeModule
             CleanerModule.AddPath(mazeObjUUIDs);
         }
 
-        public UUID generateCube(UUID hostID, Vector3 pos)
+        public UUID generateCube(UUID hostID, Vector3 pos, float scale = 1f)
         {
             try
             {
@@ -479,7 +480,7 @@ namespace MazeModule
 
                 SceneObjectGroup group = new SceneObjectGroup(part);
                 group.Name = "Path_Cube";
-                part.Scale = new Vector3(objScale, objScale, 1);
+                part.Scale = new Vector3(objScale, objScale, objScale);
                 group.OwnerID = owner;
                 group.RootPart.OwnerID = owner;
                 group.RootPart.CreatorID = owner;
@@ -563,7 +564,7 @@ namespace MazeModule
                 SceneObjectPart controller = getController();
                 TaskInventoryItem item = controller.Inventory.GetInventoryItem("Ball");
                 SceneObjectPart startPointObj = m_scene.GetSceneObjectPart(startPoint);
-                List<SceneObjectGroup> newBall = m_scene.RezObject(controller, item, startPointObj.AbsolutePosition, null, Vector3.Zero, 0, false, false);
+                List<SceneObjectGroup> newBall = m_scene.RezObject(controller, item, startPointObj.AbsolutePosition + new Vector3(0,0,objScale*1.5f), null, Vector3.Zero, 0, false, false);
                 mazeBallUUID = newBall[0].UUID;
                 newBall[0].ResumeScripts();
                 Player newPlayer = new Player(newBall[0].UUID, "player" + players.Count.ToString(), startPointPos);
@@ -673,7 +674,7 @@ namespace MazeModule
                             m_log.WarnFormat("[MazeMod] Creating obstacle: " + randomObstacle.Name);
                             TaskInventoryItem obstacleInvItem = controller.Inventory.GetInventoryItem(randomObstacle.Name);
                             SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(map[x, y]);
-                            List<SceneObjectGroup> newObstacle = m_scene.RezObject(controller, obstacleInvItem, spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z * 1.15f), null, Vector3.Zero, 0, false, false);
+                            List<SceneObjectGroup> newObstacle = m_scene.RezObject(controller, obstacleInvItem, spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z*0.8f), null, Vector3.Zero, 0, false, false);
                             mazeObstacleUUIDs[x, y] = newObstacle[0].UUID;
                             newObstacle[0].ResumeScripts();
                             ObstacleModule.AddObject(newObstacle[0].UUID, randomObstacle.Name);
@@ -729,7 +730,7 @@ namespace MazeModule
                             PowerUp randomPowerUp = PowerUpModule.GetRandomPowerUp();
                             TaskInventoryItem powerup = controller.Inventory.GetInventoryItem(randomPowerUp.Name);
                             SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(map[x, y]);
-                            Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z * 1.15f);
+                            Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z*0.8f);
                             List<SceneObjectGroup> newPowerup = m_scene.RezObject(controller, powerup, spawnPos, null, Vector3.Zero, 0, false, false);
                             mazePowerupsUUIDs[x, y] = newPowerup[0].UUID;
                             newPowerup[0].ResumeScripts();
@@ -742,7 +743,7 @@ namespace MazeModule
                 PowerUp endPowerup = PowerUpModule.getPowerUp("Jump");
                 TaskInventoryItem endPowerupInvItem = controller.Inventory.GetInventoryItem(endPowerup.Name);
                 SceneObjectPart endPointInstance = m_scene.GetSceneObjectPart(endPoint);
-                Vector3 endPos = endPointInstance.AbsolutePosition + new Vector3(0, 0, endPointInstance.Scale.Z * 1.15f);
+                Vector3 endPos = endPointInstance.AbsolutePosition + new Vector3(0, 0, endPointInstance.Scale.Z * 0.8f);
                 List<SceneObjectGroup> endPowerupInstance = m_scene.RezObject(controller, endPowerupInvItem, endPos, null, Vector3.Zero, 0, false, false);
                 mazePowerupsUUIDs[endPointPos[0], endPointPos[1]] = endPowerupInstance[0].UUID;
                 endPowerupInstance[0].ResumeScripts();
@@ -768,7 +769,7 @@ namespace MazeModule
                     SceneObjectPart controller = getController();
                     TaskInventoryItem item = controller.Inventory.GetInventoryItem("Flag");
                     SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(mazeObjUUIDs[landmark.getStartPoint()[0], landmark.getStartPoint()[1]]);
-                    Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z);
+                    Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z*0.75f);
                     List<SceneObjectGroup> newLandmark = m_scene.RezObject(controller, item, spawnPos, null, Vector3.Zero, 0, false, false);
                     newLandmark[0].ResumeScripts();
                     LandmarkModule.addLandmark(newLandmark[0].UUID, landmark);
@@ -929,10 +930,10 @@ namespace MazeModule
             SceneObjectPart startPointObj = getController();
             if (startPointObj == null) return 0;
 
-            Vector3 newStartPointPos = endPointObj.AbsolutePosition + new Vector3(0, 0, 4);
+            Vector3 newStartPointPos = endPointObj.AbsolutePosition + new Vector3(0, 0, objScale);
             newStartPointPos.Y = endPointObj.AbsolutePosition.Y + objScale;
             newStartPointPos.X = startPointObj.AbsolutePosition.X + START_OFFSET.X;
-            generateLevel(UUID.Zero, UUID.Zero, Convert.ToInt32(Math.Round(mazeObjUUIDs.GetLength(0) * 0.75f)), newStartPointPos);
+            generateLevel(hostID, UUID.Zero, Convert.ToInt32(Math.Round(mazeObjUUIDs.GetLength(0) * 0.75f)), newStartPointPos);
             return 1;
 
         }
