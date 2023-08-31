@@ -1,19 +1,39 @@
 
 command(){
     // Commands start here.
-    move_fwd(2);
-    sleep(2);
-    // build_fwd();
-    // move_fwd(4);
+    //llApplyImpulse(<0,0,1000000> * llGetMass(), FALSE);
+    // move_right(4);
     // sleep(4);
     // move_right(1);
     // sleep(1);
     // build_fwd();
-    // move_fwd(2);
-    // move_right(2);
+    // move_right(6);
+    // sleep(6);
+    // move_fwd(7);
+    // sleep(7);
+
+    // move_fwd(7);
+    // sleep(7);
+
+    move_fwd(5);
+    sleep(5);
+
+    // move_fwd(8);
+    // sleep(8);
+    move_right(6);
+    sleep(6);
+    move_fwd(3);
+    sleep(3);
+    // move_left(2);
     // sleep(2);
-    // move_fwd(2);
+    // move_back(2);
     // sleep(2);
+    // move_left(2);
+    // sleep(2);
+    // move_fwd(7);
+    // sleep(7);
+    level_up();
+
     // build_fwd();
     //activate_powerup("Jump",[]);
 
@@ -54,6 +74,10 @@ build_right(){
 
 build_back(){
     activate_powerup("Build",["back"]);
+}
+
+level_up(){
+    activate_powerup("LevelUp",[]);
 }
 
 integer powerup_num(string searchPowerup){

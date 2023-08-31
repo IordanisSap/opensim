@@ -184,7 +184,7 @@ namespace MazeModule
             );
             PowerUpModule.AddPowerUp(
                 new PowerUp(
-                    "Jump",
+                    "LevelUp",
                     100,
                     delegate (Player player, object[] data)
                     {
@@ -192,9 +192,19 @@ namespace MazeModule
                         UUID nextLandmark = LandmarkModule.getNextLandmark(LandmarkModule.getPlayerLandmark(player.getUUID()));
                         SceneObjectPart nextLandmarkInstance = m_scene.GetSceneObjectPart(nextLandmark);
                         //playerObj.RootPart.ParentGroup.MoveToTarget(nextLandmarkInstance.AbsolutePosition - new Vector3(0, 0, nextLandmarkInstance.Scale.Z * 2), 0.5f);
-                        playerObj.TeleportObject(player.getUUID(), nextLandmarkInstance.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
-                        playerObj.RootPart.SetVelocity(new Vector3(0, 0, 0), true);
+                        movePlayerToPosition(playerObj.RootPart, new Vector3(0, 1, 1));
+                        playerObj.TeleportObject(player.getUUID(), playerObj.AbsolutePosition + new Vector3(0, objScale/1.75f, objScale * 1.75f), Quaternion.Identity, 1);
+                        // playerObj.RootPart.SetVelocity(new Vector3(0, 0, 0), true);
                         player.AddToPath(LandmarkModule.getLandmark(nextLandmark).getStartPoint());
+                        string timerId = "teleportToLandmark" + player.getUUID().ToString();
+                        Timer teleportTimer = new Timer(delegate (object state)
+                        {
+                            SceneObjectGroup playerObjCurr = m_scene.GetSceneObjectGroup(player.getUUID());
+                            playerObjCurr.TeleportObject(player.getUUID(), nextLandmarkInstance.AbsolutePosition, Quaternion.Identity, 1);
+                            timerDictionary[timerId].Dispose();
+                            timerDictionary.Remove(timerId);
+                        }, null, 1000, Timeout.Infinite);
+                        timerDictionary.Add(timerId, teleportTimer);
 
                     },
                     delegate (Player player, object[] data)
@@ -715,7 +725,7 @@ namespace MazeModule
         private void createPowerUps(UUID[,] map, List<int[]> pointsOfInterest, List<int[]> path)
         {
             SceneObjectPart controller = getController();
-            PowerUpModule.RegisterSpecialPowerUp("Jump");
+            PowerUpModule.RegisterSpecialPowerUp("LevelUp");
             try
             {
                 mazePowerupsUUIDs = new UUID[map.GetLength(0), map.GetLength(1)];
@@ -763,7 +773,7 @@ namespace MazeModule
                         }
                     }
                 }
-                PowerUp endPowerup = PowerUpModule.getPowerUp("Jump");
+                PowerUp endPowerup = PowerUpModule.getPowerUp("LevelUp");
                 TaskInventoryItem endPowerupInvItem = controller.Inventory.GetInventoryItem(endPowerup.Name);
                 SceneObjectPart endPointInstance = m_scene.GetSceneObjectPart(endPoint);
                 Vector3 endPos = endPointInstance.AbsolutePosition + new Vector3(0, 0, endPointInstance.Scale.Z * 0.8f);
@@ -968,6 +978,60 @@ namespace MazeModule
             return 1;
 
         }
+        public void movePlayerToPosition(SceneObjectPart player, Vector3 dist)
+        {
+            Vector3 target = player.AbsolutePosition + new Vector3(dist.X * objScale, dist.Y * objScale, dist.Z * objScale);
+            Console.WriteLine("current pos" + player.AbsolutePosition.ToString() + " dist " + dist.ToString() + " target " + target.ToString());
+            float speed = objScale * 1.05f;
+            Vector3 directionVector = new Vector3(dist.X != 0 ? Math.Sign(dist.X) : 0, dist.Y != 0 ? Math.Sign(dist.Y) : 0, 0);
+            Vector3 moveVector = directionVector * speed;
+            int MOVE_CHECK_INTERVAL = 50;
+            float MOVE_CHECK_THRESHOLD = 0.15f;
+
+            player.SetVelocity(moveVector, false);
+            Vector3 rotationDirectionVector = new Vector3(dist.X == 0 ? -Math.Sign(dist.Y) : 0, dist.Y == 0 ? Math.Sign(dist.X) : 0, 0);
+            player.UpdateAngularVelocity(rotationDirectionVector * PI);
+
+            Console.WriteLine("Moving player toooooooooooooo " + target.ToString());
+            string timerId = player.UUID.ToString() + "move";
+            if (timerDictionary.ContainsKey(timerId))
+            {
+                Timer timerToRemove = timerDictionary[timerId];
+                timerToRemove.Dispose();
+                timerDictionary.Remove(timerId);
+            }
+            Timer timer = new Timer((object state) =>
+            {
+                Console.WriteLine("Checking player position: " + player.AbsolutePosition.ToString() + "target: " + target.ToString());
+                Console.WriteLine("Player velocity: " + player.Velocity.ToString());
+                if (Vector3.Distance(player.AbsolutePosition, target) < MOVE_CHECK_THRESHOLD
+                    || dist.X > 0 && player.AbsolutePosition.X > target.X
+                    || dist.X < 0 && player.AbsolutePosition.X < target.X
+                    || dist.Y > 0 && player.AbsolutePosition.Y > target.Y
+                    || dist.Y < 0 && player.AbsolutePosition.Y < target.Y
+                )
+                {
+                    player.SetVelocity(Vector3.Zero, false);
+                    player.UpdateAngularVelocity(new Vector3(0, 0, 0));
+                    player.ParentGroup.UpdateGroupPosition(target);
+
+                    if (timerDictionary.ContainsKey(timerId))
+                    {
+                        Timer timerToRemove = timerDictionary[timerId];
+                        timerToRemove.Dispose();
+                        timerDictionary.Remove(timerId);
+                        Console.WriteLine(timerDictionary.Count.ToString());
+                    }
+                }
+                else if (player.Velocity.X == 0 && player.Velocity.Y == 0)
+                {
+                    Console.WriteLine("Setting velocity: " + moveVector.ToString());
+                    player.SetVelocity(moveVector, false);
+                }
+            }, null, MOVE_CHECK_INTERVAL, MOVE_CHECK_INTERVAL);
+
+            timerDictionary.Add(timerId, timer);
+        }
 
         public void movePlayer(UUID hostID, UUID scriptID, Vector3 dist)
         {
@@ -981,44 +1045,7 @@ namespace MazeModule
                 p.AddToPath(newMove);
 
                 SceneObjectPart playerObj = m_scene.GetSceneObjectPart(hostID);
-                Vector3 target = playerObj.AbsolutePosition + new Vector3(dist.X * objScale, dist.Y * objScale, 0);
-                float speed = objScale * 1.05f;
-                Vector3 directionVector = new Vector3(dist.X != 0 ? Math.Sign(dist.X) : 0, dist.Y != 0 ? Math.Sign(dist.Y) : 0, 0);
-                Vector3 moveVector = directionVector * speed;
-                int MOVE_CHECK_INTERVAL = 50;
-                float MOVE_CHECK_THRESHOLD = 0.15f;
-
-                playerObj.SetVelocity(moveVector, false);
-                Vector3 rotationDirectionVector = new Vector3(dist.X == 0 ? -Math.Sign(dist.Y) : 0, dist.Y == 0 ? Math.Sign(dist.X) : 0, 0);
-                playerObj.UpdateAngularVelocity(rotationDirectionVector * PI);
-
-                Console.WriteLine("Moving player toooooooooooooo " + target.ToString());
-                string timerId = p.getUUID().ToString() + "move";
-                Timer timer = new Timer((object state) =>
-                {
-                    Console.WriteLine("Checking player position");
-                    if (Vector3.Distance(playerObj.AbsolutePosition, target) < MOVE_CHECK_THRESHOLD)
-                    {
-                        playerObj.SetVelocity(Vector3.Zero, false);
-                        playerObj.UpdateAngularVelocity(new Vector3(0, 0, 0));
-                        playerObj.ParentGroup.UpdateGroupPosition(target);
-
-                        if (timerDictionary.ContainsKey(timerId))
-                        {
-                            Timer timerToRemove = timerDictionary[timerId];
-                            timerToRemove.Dispose();
-                            timerDictionary.Remove(timerId);
-                            Console.WriteLine(timerDictionary.Count.ToString());
-                        }
-                    }
-                    else if (playerObj.Velocity == Vector3.Zero)
-                    {
-                        Console.WriteLine("Setting velocity: " + moveVector.ToString());
-                        playerObj.SetVelocity(moveVector, false);
-                    }
-                }, null, MOVE_CHECK_INTERVAL, MOVE_CHECK_INTERVAL);
-
-                timerDictionary.Add(timerId, timer);
+                movePlayerToPosition(playerObj, dist);
 
 
                 m_log.WarnFormat("[MazeMod] Player moved, last pos " + p.GetLastPos()[0] + ", " + p.GetLastPos()[1]);
