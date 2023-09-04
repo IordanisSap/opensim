@@ -15,15 +15,15 @@ command(){
     // move_fwd(7);
     // sleep(7);
 
-    move_fwd(5);
-    sleep(5);
+    // move_fwd(5);
+    // sleep(5);
 
     // move_fwd(8);
     // sleep(8);
-    move_right(6);
-    sleep(6);
-    move_fwd(3);
-    sleep(3);
+    // move_right(6);
+    // sleep(6);
+    // move_fwd(3);
+    // sleep(3);
     // move_left(2);
     // sleep(2);
     // move_back(2);

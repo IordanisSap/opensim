@@ -23,24 +23,35 @@ using System.Linq;
 public class Obstacle
 {
     public delegate void Callback(Player player);
-    public Callback CollisionCallback { get; set; }
+    public Callback OnCollisionCallback { get; set; }
 
     public delegate bool PlaceCondition(int[] pos);
 
     public PlaceCondition PlaceConditionCallback { get; set; }
+
+    public PlaceCondition OnPlaceCallback { get; set; }
     public string Name { get; set; }
-    public Obstacle(string name, Callback onCollision, PlaceCondition placeCondition)
+    public Obstacle(string name, Callback onCollision, PlaceCondition placeCondition, PlaceCondition placeCallback = null)
     {
         this.Name = name;
-        this.CollisionCallback = onCollision;
+        this.OnCollisionCallback = onCollision;
         this.PlaceConditionCallback = placeCondition;
+        this.OnPlaceCallback = placeCallback;
     }
     public void OnCollision(Player player)
     {
         // Invoke the CollisionCallback delegate
-        if (CollisionCallback != null)
+        if (OnCollisionCallback != null)
         {
-            CollisionCallback(player);
+            OnCollisionCallback(player);
+        }
+    }
+
+    public void onPlace(int[] data)
+    {
+        if (OnPlaceCallback != null)
+        {
+            OnPlaceCallback(data);
         }
     }
 }
