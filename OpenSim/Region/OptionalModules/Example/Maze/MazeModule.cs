@@ -123,6 +123,7 @@ namespace MazeModule
                     },
                     delegate (Player player, object[] data)
                     {
+                        Console.WriteLine("dEACTIVATE SHIELD");
                         Primitive.TextureEntry texture = new Primitive.TextureEntry(UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f"));
                         Primitive.TextureEntryFace face = texture.CreateFace(0);
                         face.Glow = 0.04f;
@@ -337,8 +338,6 @@ namespace MazeModule
 
                         Timer bombTimer = new Timer(delegate (object state)
                         {
-                            Console.WriteLine("Current position: " + currPos[0] + " " + currPos[1]);
-                            Console.WriteLine("target position: " + targetPos[0] + " " + targetPos[1]);
                             currPos[0] += moveVector.X != 0 ? Math.Sign(moveVector.X) : 0;
                             currPos[1] += moveVector.Y != 0 ? Math.Sign(moveVector.Y) : 0;
 
@@ -456,6 +455,9 @@ namespace MazeModule
             {
                 Player p = getPlayer(player);
                 if (p == null) return;
+                foreach(PowerUp pwrUp in p.GetActivePowerUps()){
+                    pwrUp.Deactivate(p);
+                }
                 UUID checkPoint = LandmarkModule.getPlayerLandmark(p.getUUID());
                 Landmark landmark = LandmarkModule.getLandmark(checkPoint);
                 SceneObjectPart checkPointInstance = m_scene.GetSceneObjectPart(checkPoint);

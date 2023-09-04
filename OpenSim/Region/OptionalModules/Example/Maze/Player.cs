@@ -115,7 +115,11 @@ public class Player
     {
         return invPowerUps;
     }
-
+    public List<PowerUp> GetActivePowerUps()
+    {
+        return activePowerUps;
+    }
+    
     public void Reset(){
         invPowerUps.Clear();
         activePowerUps.Clear();
