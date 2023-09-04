@@ -1,30 +1,11 @@
 
 command(){
     // Commands start here.
-    //llApplyImpulse(<0,0,1000000> * llGetMass(), FALSE);
-    // move_right(4);
-    // sleep(4);
-    // move_right(1);
-    // sleep(1);
-    // build_fwd();
-    // move_right(6);
-    // sleep(6);
-    // move_fwd(7);
-    // sleep(7);
-
-    // move_fwd(7);
-    // sleep(7);
-
-    // move_fwd(5);
-    // sleep(5);
 
     // move_fwd(1);
     // sleep(1);
-    // move_right(2);
-    // sleep(2);
     // move_fwd(2);
     // sleep(2);
-    shield();
     // move_right(2);
     // sleep(2);
     // move_fwd(6);
@@ -35,12 +16,9 @@ command(){
     // sleep(2);
     // move_left(2);
     // sleep(2);
-    //level_up();
-
+    // level_up();
     // build_fwd();
-    //activate_powerup("Jump",[]);
 
-    //activate_powerup("Build",["front"]);
     // Commands end here.
  }
  

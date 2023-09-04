@@ -95,7 +95,7 @@ namespace MazeModule
             PowerUpModule.AddPowerUp(
                 new PowerUp(
                     "Shield",
-                    15000,
+                    10000,
                     delegate (Player player, object[] data)
                     {
                         TaskInventoryItem textureItem = getController().Inventory.GetInventoryItem("Shield_texture");
