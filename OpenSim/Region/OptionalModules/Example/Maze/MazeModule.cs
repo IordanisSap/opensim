@@ -194,7 +194,7 @@ namespace MazeModule
                         SceneObjectPart nextLandmarkInstance = m_scene.GetSceneObjectPart(nextLandmark);
                         //playerObj.RootPart.ParentGroup.MoveToTarget(nextLandmarkInstance.AbsolutePosition - new Vector3(0, 0, nextLandmarkInstance.Scale.Z * 2), 0.5f);
                         movePlayerToPosition(playerObj.RootPart, new Vector3(0, 1, 1));
-                        playerObj.TeleportObject(player.getUUID(), playerObj.AbsolutePosition + new Vector3(0, objScale/1.75f, objScale * 1.75f), Quaternion.Identity, 1);
+                        playerObj.TeleportObject(player.getUUID(), playerObj.AbsolutePosition + new Vector3(0, objScale / 1.75f, objScale * 1.75f), Quaternion.Identity, 1);
                         // playerObj.RootPart.SetVelocity(new Vector3(0, 0, 0), true);
                         player.AddToPath(LandmarkModule.getLandmark(nextLandmark).getStartPoint());
                         string timerId = "teleportToLandmark" + player.getUUID().ToString();
@@ -218,48 +218,48 @@ namespace MazeModule
 
         private void initObstacles()
         {
-            ObstacleModule.AddObstacle(
-                new Obstacle(
-                    "Obstacle1",
-                    delegate (Player player)
-                    {
-                        if (player.hasPowerUp("Shield")) { return; }
-                        SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
-                        teleportToStart(player.getUUID());
-                    },
-                    (int[] pos) =>
-                    {
-                        List<int[]> path = mazeSolver.getPath();
-                        bool inPath = false;
-                        foreach (int[] array in path)
-                        {
-                            if (array[0] == pos[0] && array[1] == pos[1]) inPath = true;
-                        }
-                        mazeSolver.printPath();
-                        if (!inPath) return true;
+            // ObstacleModule.AddObstacle(
+            //     new Obstacle(
+            //         "Obstacle1",
+            //         delegate (Player player)
+            //         {
+            //             if (player.hasPowerUp("Shield")) { return; }
+            //             SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
+            //             teleportToStart(player.getUUID());
+            //         },
+            //         (int[] pos) =>
+            //         {
+            //             List<int[]> path = mazeSolver.getPath();
+            //             bool inPath = false;
+            //             foreach (int[] array in path)
+            //             {
+            //                 if (array[0] == pos[0] && array[1] == pos[1]) inPath = true;
+            //             }
+            //             mazeSolver.printPath();
+            //             if (!inPath) return true;
 
-                        bool found = false;
-                        uint obstacleNum = 0;
-                        uint shieldNum = 0;
-                        for (int i = path.Count - 1; i >= 0; i--)
-                        {
-                            int[] array = path[i];
-                            if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") obstacleNum++;
-                            if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") shieldNum++;
-                            if (array[0] == pos[0] && array[1] == pos[1])
-                            {
-                                if (obstacleNum > shieldNum) return false;
-                                found = true;
-                                continue;
-                            }
-                            if (!found) continue;
-                            if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") return false;
-                            if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") return true;
-                        }
-                        return false;
-                    }
-                )
-            );
+            //             bool found = false;
+            //             uint obstacleNum = 0;
+            //             uint shieldNum = 0;
+            //             for (int i = path.Count - 1; i >= 0; i--)
+            //             {
+            //                 int[] array = path[i];
+            //                 if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") obstacleNum++;
+            //                 if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") shieldNum++;
+            //                 if (array[0] == pos[0] && array[1] == pos[1])
+            //                 {
+            //                     if (obstacleNum > shieldNum) return false;
+            //                     found = true;
+            //                     continue;
+            //                 }
+            //                 if (!found) continue;
+            //                 if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") return false;
+            //                 if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") return true;
+            //             }
+            //             return false;
+            //         }
+            //     )
+            // );
 
             ObstacleModule.AddObstacle(
                 new Obstacle(
@@ -271,7 +271,7 @@ namespace MazeModule
                     },
                     (int[] pos) =>
                     {
-                        
+
                         Console.WriteLine("Check can place bomb" + pos[0] + " " + pos[1]);
                         List<int[]> path = mazeSolver.getPath();
                         int index = path.FindIndex(array => array[0] == pos[0] && array[1] == pos[1]);
@@ -279,9 +279,9 @@ namespace MazeModule
                         if (index == path.Count - 1) return false;
 
                         const int bombRadius = 3;
-                        if (obstacleInRange(pos, bombRadius + 1, "Bomb")) return false;
+                        if (obstacleInRange(pos, bombRadius + 1)) return false;
 
-                        bool isTopInPath = path[index + 1][0] == pos[0] && path[index + 1][1] == pos[1] + 1 || path[index -1][0] == pos[0] && path[index - 1][1] == pos[1] + 1;
+                        bool isTopInPath = path[index + 1][0] == pos[0] && path[index + 1][1] == pos[1] + 1 || path[index - 1][0] == pos[0] && path[index - 1][1] == pos[1] + 1;
                         bool isBottomInPath = path[index + 1][0] == pos[0] && path[index + 1][1] == pos[1] - 1 || path[index - 1][0] == pos[0] && path[index - 1][1] == pos[1] - 1;
                         bool isLeftInPath = path[index + 1][0] == pos[0] - 1 && path[index + 1][1] == pos[1] || path[index - 1][0] == pos[0] - 1 && path[index - 1][1] == pos[1];
                         bool isRightInPath = path[index + 1][0] == pos[0] + 1 && path[index + 1][1] == pos[1] || path[index - 1][0] == pos[0] + 1 && path[index - 1][1] == pos[1];
@@ -290,9 +290,9 @@ namespace MazeModule
                         bool canMoveBottom = mazeObjUUIDs[pos[0], pos[1] - 1] != UUID.Zero && !isBottomInPath;
                         bool canMoveLeft = mazeObjUUIDs[pos[0] - 1, pos[1]] != UUID.Zero && !isLeftInPath;
                         bool canMoveRight = mazeObjUUIDs[pos[0] + 1, pos[1]] != UUID.Zero && !isRightInPath;
-                        
-                        
-                        Console.WriteLine("end of check");
+
+
+                        Console.WriteLine("end of check:" + canMoveTop + " " + canMoveBottom + " " + canMoveLeft + " " + canMoveRight);
                         return canMoveTop || canMoveBottom || canMoveLeft || canMoveRight;
                     },
                     (int[] pos) =>
@@ -302,31 +302,48 @@ namespace MazeModule
                         SceneObjectGroup instance = m_scene.GetSceneObjectGroup(instanceUUID);
                         if (instance == null) return false;
 
-                        int[] startPos;
-                        int[] endPos;
-                        int[] currPos = pos;
-                        if (mazeObjUUIDs[pos[0], pos[1] + 1] != UUID.Zero && !(path.FindIndex(array => array[0] == pos[0] && array[1] == pos[1] + 1) >= 0)){
-                            startPos = new int[2] { pos[0], pos[1] - 1 };
+                        bool hasBlockAndNotInPath(int xPos, int yPos)
+                        {
+                            return mazeObjUUIDs[xPos, yPos] != UUID.Zero && !(path.FindIndex(array => array[0] == xPos && array[1] == yPos) >= 0);
+                        }
+
+                        int[] startPos = pos;
+                        int[] endPos = null;
+                        int[] currPos = new int[2] { pos[0], pos[1] };
+                        if (hasBlockAndNotInPath(pos[0], pos[1] + 1))
+                        {
                             endPos = new int[2] { pos[0], pos[1] + 1 };
+                            if (mazeObjUUIDs[pos[0], pos[1] - 1] != UUID.Zero) startPos = new int[2] { pos[0], pos[1] - 1 };
                         }
-                        else if (mazeObjUUIDs[pos[0], pos[1] - 1] != UUID.Zero && !(path.FindIndex(array => array[0] == pos[0] && array[1] == pos[1] - 1) >= 0))
+                        else if (hasBlockAndNotInPath(pos[0], pos[1] - 1))
                         {
-                            startPos = new int[2] { pos[0], pos[1] + 1 };
                             endPos = new int[2] { pos[0], pos[1] - 1 };
+                            if (mazeObjUUIDs[pos[0], pos[1] + 1] != UUID.Zero) startPos = new int[2] { pos[0], pos[1] + 1 };
                         }
-                        else if (mazeObjUUIDs[pos[0] - 1, pos[1]] != UUID.Zero && !(path.FindIndex(array => array[0] == pos[0] - 1 && array[1] == pos[1]) >= 0))
+                        else if (hasBlockAndNotInPath(pos[0] - 1, pos[1]))
                         {
-                            startPos = new int[2] { pos[0] + 1, pos[1] };
+
                             endPos = new int[2] { pos[0] - 1, pos[1] };
+                            if (mazeObjUUIDs[pos[0] + 1, pos[1]] != UUID.Zero) startPos = new int[2] { pos[0] + 1, pos[1] };
                         }
-                        else if (mazeObjUUIDs[pos[0] + 1, pos[1]] != UUID.Zero && !(path.FindIndex(array => array[0] == pos[0] + 1 && array[1] == pos[1]) >= 0))
+                        else if (hasBlockAndNotInPath(pos[0] + 1, pos[1]))
                         {
-                            startPos = new int[2] { pos[0] - 1, pos[1] };
                             endPos = new int[2] { pos[0] + 1, pos[1] };
+                            if (mazeObjUUIDs[pos[0] - 1, pos[1]] != UUID.Zero) startPos = new int[2] { pos[0] - 1, pos[1] };
                         }
-                        else return false;
-                        
-                        
+                        else
+                        {
+                            m_log.ErrorFormat("[MazeMod] Bomb obstacle has no end position");
+                            return false;
+                        }
+
+                        Console.WriteLine("Starting with positions:");
+                        Console.WriteLine("startPos: " + startPos[0] + " " + startPos[1]);
+                        Console.WriteLine("endPos: " + endPos[0] + " " + endPos[1]);
+                        Console.WriteLine("currPos: " + currPos[0] + " " + currPos[1]);
+                        Console.WriteLine("pos: " + pos[0] + " " + pos[1]);
+                        Console.WriteLine("---------");
+
                         float speed = objScale * 1f;
 
                         int[] targetPos = endPos;
@@ -343,6 +360,12 @@ namespace MazeModule
 
                             if (currPos[0] == endPos[0] && currPos[1] == endPos[1]) targetPos = startPos;
                             else if (currPos[0] == startPos[0] && currPos[1] == startPos[1]) targetPos = endPos;
+                            Console.WriteLine("startPos: " + startPos[0] + " " + startPos[1]);
+                            Console.WriteLine("endPos: " + endPos[0] + " " + endPos[1]);
+                            Console.WriteLine("currPos: " + currPos[0] + " " + currPos[1]);
+                            Console.WriteLine("pos: " + pos[0] + " " + pos[1]);
+                            Console.WriteLine("targetpos: " + targetPos[0] + " " + targetPos[1]);
+
 
                             SceneObjectPart currBlock = m_scene.GetSceneObjectPart(mazeObjUUIDs[currPos[0], currPos[1]]);
                             if (currBlock == null) return;
@@ -455,7 +478,8 @@ namespace MazeModule
             {
                 Player p = getPlayer(player);
                 if (p == null) return;
-                foreach(PowerUp pwrUp in p.GetActivePowerUps()){
+                foreach (PowerUp pwrUp in p.GetActivePowerUps())
+                {
                     pwrUp.Deactivate(p);
                 }
                 UUID checkPoint = LandmarkModule.getPlayerLandmark(p.getUUID());
@@ -477,6 +501,7 @@ namespace MazeModule
                 SceneObjectGroup playerObj = m_scene.GetSceneObjectGroup(player);
                 playerObj.TeleportObject(playerObj.UUID, checkPointInstance.AbsolutePosition + new Vector3(0, 0, objScale), Quaternion.Identity, 1);
                 playerObj.RootPart.SetVelocity(new Vector3(0, 0, 0), false);
+                playerObj.StopScriptInstances();
                 //playerObj.RootPart.ParentGroup.MoveToTarget(checkPointInstance.AbsolutePosition - new Vector3(0, 0, checkPointInstance.Scale.Z * 2), 0.5f);
 
             }
@@ -955,13 +980,15 @@ namespace MazeModule
             return players.Find(obj => obj.getUUID() == player);
         }
 
-        private bool obstacleInRange(int[] pos, int range, string obstacleName){
+        private bool obstacleInRange(int[] pos, int range, string obstacleName = null)
+        {
             for (int y = pos[1] - range; y < pos[1] + range; y++)
             {
                 for (int x = pos[0] - range; x < pos[0] + range; x++)
                 {
                     if (x < 0 || x > mazeObjUUIDs.GetLength(0) - 1 || y < 0 || y > mazeObjUUIDs.GetLength(1) - 1) continue;
-                    if (mazeObstacleUUIDs[x, y] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[x, y]).Name == obstacleName) return true;
+                    if (obstacleName != null) if (mazeObstacleUUIDs[x, y] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[x, y]).Name == obstacleName) return true;
+                        else if (mazeObstacleUUIDs[x, y] != UUID.Zero) return true;
                 }
             }
             return false;

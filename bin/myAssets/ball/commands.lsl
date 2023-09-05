@@ -2,16 +2,29 @@
 command(){
     // Commands start here.
 
-    // move_fwd(1);
+    // move_fwd(3);
+    // sleep(3);
+    // move_left(3);
+    // sleep(3);
+
+    // move_left(1);
     // sleep(1);
     // move_fwd(2);
     // sleep(2);
-    // move_right(2);
-    // sleep(2);
-    // move_fwd(6);
-    // sleep(6);
-    // move_left(2);
-    // sleep(2);
+
+
+    move_right(2);
+    shield();
+    sleep(2);
+    move_fwd(4);
+    sleep(4);
+    move_right(6);
+    sleep(6);
+    move_fwd(1);
+    sleep(1);
+    level_up();
+
+
     // move_back(2);
     // sleep(2);
     // move_left(2);
