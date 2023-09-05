@@ -218,48 +218,48 @@ namespace MazeModule
 
         private void initObstacles()
         {
-            // ObstacleModule.AddObstacle(
-            //     new Obstacle(
-            //         "Obstacle1",
-            //         delegate (Player player)
-            //         {
-            //             if (player.hasPowerUp("Shield")) { return; }
-            //             SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
-            //             teleportToStart(player.getUUID());
-            //         },
-            //         (int[] pos) =>
-            //         {
-            //             List<int[]> path = mazeSolver.getPath();
-            //             bool inPath = false;
-            //             foreach (int[] array in path)
-            //             {
-            //                 if (array[0] == pos[0] && array[1] == pos[1]) inPath = true;
-            //             }
-            //             mazeSolver.printPath();
-            //             if (!inPath) return true;
+            ObstacleModule.AddObstacle(
+                new Obstacle(
+                    "Obstacle1",
+                    delegate (Player player)
+                    {
+                        if (player.hasPowerUp("Shield")) { return; }
+                        SceneObjectGroup start = m_scene.GetSceneObjectGroup(startPoint);
+                        teleportToStart(player.getUUID());
+                    },
+                    (int[] pos) =>
+                    {
+                        List<int[]> path = mazeSolver.getPath();
+                        bool inPath = false;
+                        foreach (int[] array in path)
+                        {
+                            if (array[0] == pos[0] && array[1] == pos[1]) inPath = true;
+                        }
+                        mazeSolver.printPath();
+                        if (!inPath) return true;
 
-            //             bool found = false;
-            //             uint obstacleNum = 0;
-            //             uint shieldNum = 0;
-            //             for (int i = path.Count - 1; i >= 0; i--)
-            //             {
-            //                 int[] array = path[i];
-            //                 if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") obstacleNum++;
-            //                 if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") shieldNum++;
-            //                 if (array[0] == pos[0] && array[1] == pos[1])
-            //                 {
-            //                     if (obstacleNum > shieldNum) return false;
-            //                     found = true;
-            //                     continue;
-            //                 }
-            //                 if (!found) continue;
-            //                 if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") return false;
-            //                 if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") return true;
-            //             }
-            //             return false;
-            //         }
-            //     )
-            // );
+                        bool found = false;
+                        uint obstacleNum = 0;
+                        uint shieldNum = 0;
+                        for (int i = path.Count - 1; i >= 0; i--)
+                        {
+                            int[] array = path[i];
+                            if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") obstacleNum++;
+                            if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") shieldNum++;
+                            if (array[0] == pos[0] && array[1] == pos[1])
+                            {
+                                if (obstacleNum > shieldNum) return false;
+                                found = true;
+                                continue;
+                            }
+                            if (!found) continue;
+                            if (mazeObstacleUUIDs[array[0], array[1]] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[array[0], array[1]]).Name == "Obstacle1") return false;
+                            if (mazePowerupsUUIDs[array[0], array[1]] != UUID.Zero && PowerUpModule.getPowerUp(mazePowerupsUUIDs[array[0], array[1]]).Name == "Shield") return true;
+                        }
+                        return false;
+                    }
+                )
+            );
 
             ObstacleModule.AddObstacle(
                 new Obstacle(
@@ -831,9 +831,15 @@ namespace MazeModule
                     {
                         if (map[x, y] != UUID.Zero)
                         {
-                            if (landmarkUUIDs[x, y] != UUID.Zero || mazePowerupsUUIDs[x, y] != UUID.Zero || mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 1) != 0) continue;
+                            if (landmarkUUIDs[x, y] != UUID.Zero || mazePowerupsUUIDs[x, y] != UUID.Zero || mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 2) != 0) continue;
+                            Obstacle randomObstacle;
+                            if (ObstacleModule.GetObstacle("Bomb").PlaceConditionCallback(new int[2] { x, y })) randomObstacle = ObstacleModule.GetObstacle("Bomb");
+                            else
+                            {
+                                if (random.Next(0, 7) == 0) randomObstacle = ObstacleModule.GetRandomObstacle();
+                                else continue;
+                            }
                             SceneObjectPart controller = getController();
-                            Obstacle randomObstacle = ObstacleModule.GetRandomObstacle();
                             if (!ObstacleModule.CanPlaceObstacle(randomObstacle.Name, new int[2] { x, y })) continue;
                             m_log.WarnFormat("[MazeMod] Creating obstacle: " + randomObstacle.Name);
                             TaskInventoryItem obstacleInvItem = controller.Inventory.GetInventoryItem(randomObstacle.Name);

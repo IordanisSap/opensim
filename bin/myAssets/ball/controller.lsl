@@ -5,7 +5,7 @@ default
     {
         if (mazeHasStarted())
             return;
-        generateMaze(15, llGetPos()-<20,-3,3>, llDetectedKey(0));
+        generateMaze(5, llGetPos()-<20,-3,3>, llDetectedKey(0));
     }
 }
 
