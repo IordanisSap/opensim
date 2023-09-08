@@ -360,6 +360,24 @@ namespace MazeModule
 
                             if (currPos[0] == endPos[0] && currPos[1] == endPos[1]) targetPos = startPos;
                             else if (currPos[0] == startPos[0] && currPos[1] == startPos[1]) targetPos = endPos;
+
+                            instance = m_scene.GetSceneObjectGroup(instanceUUID);
+                            if (instance == null) return;
+
+
+                            SceneObjectPart currBlock = m_scene.GetSceneObjectPart(mazeObjUUIDs[currPos[0], currPos[1]]);
+                            if (currBlock == null) return;
+
+                            if ((currPos[0] == startPos[0] && currPos[1] == startPos[1]) || (currPos[0] == endPos[0] && currPos[1] == endPos[1])) instance.TeleportObject(instance.UUID, currBlock.AbsolutePosition + new Vector3(0, 0, objScale * 0.8f), Quaternion.Identity, 1);
+                            highlightPath(currPos);
+                            unHighlightPath(new int[2] { currPos[0] - Math.Sign(moveVector.X), currPos[1] - Math.Sign(moveVector.Y) });
+
+                            diffX = targetPos[0] - currPos[0];
+                            diffY = targetPos[1] - currPos[1];
+                            moveVector = new Vector3(diffX != 0 ? Math.Sign(diffX) : 0, diffY != 0 ? Math.Sign(diffY) : 0, 0);
+                            instance.RootPart.SetVelocity(moveVector * speed, false);
+
+
                             Console.WriteLine("startPos: " + startPos[0] + " " + startPos[1]);
                             Console.WriteLine("endPos: " + endPos[0] + " " + endPos[1]);
                             Console.WriteLine("currPos: " + currPos[0] + " " + currPos[1]);
@@ -367,17 +385,7 @@ namespace MazeModule
                             Console.WriteLine("targetpos: " + targetPos[0] + " " + targetPos[1]);
 
 
-                            SceneObjectPart currBlock = m_scene.GetSceneObjectPart(mazeObjUUIDs[currPos[0], currPos[1]]);
-                            if (currBlock == null) return;
-                            instance.TeleportObject(instance.UUID, currBlock.AbsolutePosition + new Vector3(0, 0, objScale * 0.8f), Quaternion.Identity, 1);
 
-                            diffX = targetPos[0] - currPos[0];
-                            diffY = targetPos[1] - currPos[1];
-                            moveVector = new Vector3(diffX != 0 ? Math.Sign(diffX) : 0, diffY != 0 ? Math.Sign(diffY) : 0, 0);
-
-                            instance = m_scene.GetSceneObjectGroup(instanceUUID);
-                            if (instance == null) return;
-                            instance.RootPart.SetVelocity(moveVector * speed, false);
 
                         }, null, 1000, 1000);
                         timerDictionary.Add(timerId, bombTimer);
@@ -605,7 +613,20 @@ namespace MazeModule
             }
             CleanerModule.AddPath(mazeObjUUIDs);
         }
+        private void highlightPath(int[] path)
+        {
 
+            SceneObjectPart part = m_scene.GetSceneObjectPart(mazeObjUUIDs[path[0], path[1]]);
+            if (part == null) return;
+            part.SetFaceColorAlpha(0, new Vector3(1f, 0f, 0f), 1f);
+        }
+
+        private void unHighlightPath(int[] path)
+        {
+            SceneObjectPart part = m_scene.GetSceneObjectPart(mazeObjUUIDs[path[0], path[1]]);
+            if (part == null) return;
+            part.SetFaceColorAlpha(0, new Vector3(0.7f, 0.7f, 0.7f), 1f);
+        }
         public SceneObjectPart generateCube(UUID hostID, Vector3 pos, float scale = 1f)
         {
             try
@@ -618,7 +639,7 @@ namespace MazeModule
                 Primitive.TextureEntryFace face = texture.CreateFace(0);
 
 
-                face.RGBA = new Color4(0.8f, 0.61f, 0.024f, 1f);
+                face.RGBA = new Color4(0.75f, 0.75f, 0.75f, 1f);
                 part.Shape.Textures.FaceTextures[0] = face;
 
                 SceneObjectGroup group = new SceneObjectGroup(part);
@@ -708,11 +729,15 @@ namespace MazeModule
             try
             {
                 SceneObjectPart srcObject = getController();
-                TaskInventoryItem item = srcObject.Inventory.GetInventoryItem("Endpoint");
+                TaskInventoryItem item = srcObject.Inventory.GetInventoryItem("Flag");
                 SceneObjectPart targetObject = m_scene.GetSceneObjectPart(objectUUID);
+                List<SceneObjectGroup> newFlag = m_scene.RezObject(srcObject, item, targetObject.AbsolutePosition + new Vector3(-objScale * 0.2f, objScale * 0.35f, objScale * 2.2f), null, Vector3.Zero, 0, false, false);
+                newFlag[0].ResumeScripts();
                 targetObject.ScriptAccessPin = 123;
-                m_scene.RezScriptFromPrim(item.ItemID, srcObject, objectUUID, 123, 1, 0);
 
+                TaskInventoryItem script = srcObject.Inventory.GetInventoryItem("Endpoint");
+                m_scene.RezScriptFromPrim(script.ItemID, srcObject, objectUUID, 123, 1, 0);
+                CleanerModule.AddItem(newFlag[0].UUID);
             }
             catch (Exception e)
             {
@@ -735,7 +760,7 @@ namespace MazeModule
 
                 //Create axes
                 createAxisBall(newBall[0]);
-                createAxisAttachment(avatarPlayer);
+                // createAxisAttachment(avatarPlayer);
 
                 //Add commands script
                 TaskInventoryItem commands = controller.Inventory.GetInventoryItem("Commands");
@@ -767,7 +792,7 @@ namespace MazeModule
             if (ball == null || controller == null) return;
             TaskInventoryItem item = controller.Inventory.GetInventoryItem("Axis");
             if (item == null) return;
-            List<SceneObjectGroup> newBallAxis = m_scene.RezObject(controller, item, ball.AbsolutePosition + new Vector3(0, 0, 3), null, Vector3.Zero, 0, false, false);
+            List<SceneObjectGroup> newBallAxis = m_scene.RezObject(controller, item, ball.AbsolutePosition + new Vector3(0, 0, 1.6f), null, Vector3.Zero, 0, false, false);
             newBallAxis[0].ResumeScripts();
             newBallAxis[0].ScriptSetPhantomStatus(true);
 
@@ -784,7 +809,7 @@ namespace MazeModule
                 }
                 // Rotate opposite of cameraRotation
 
-                ax.TeleportObject(ax.UUID, ball.AbsolutePosition + new Vector3(0, 0, 3), Quaternion.Identity, 1);
+                ax.TeleportObject(ax.UUID, ball.AbsolutePosition + new Vector3(0, 0, 1.6f), Quaternion.Identity, 1);
             }, null, 0, 80);
             timerDictionary.Add(timerId, ballAxisTimer);
         }
@@ -939,7 +964,7 @@ namespace MazeModule
                 foreach (Landmark landmark in landmarks)
                 {
                     SceneObjectPart controller = getController();
-                    TaskInventoryItem item = controller.Inventory.GetInventoryItem("Flag");
+                    TaskInventoryItem item = controller.Inventory.GetInventoryItem("Landmark");
                     SceneObjectPart spawnPoint = m_scene.GetSceneObjectPart(mazeObjUUIDs[landmark.getStartPoint()[0], landmark.getStartPoint()[1]]);
                     Vector3 spawnPos = spawnPoint.AbsolutePosition + new Vector3(0, 0, spawnPoint.Scale.Z * 0.75f);
                     List<SceneObjectGroup> newLandmark = m_scene.RezObject(controller, item, spawnPos, null, Vector3.Zero, 0, false, false);
@@ -993,8 +1018,9 @@ namespace MazeModule
                 for (int x = pos[0] - range; x < pos[0] + range; x++)
                 {
                     if (x < 0 || x > mazeObjUUIDs.GetLength(0) - 1 || y < 0 || y > mazeObjUUIDs.GetLength(1) - 1) continue;
-                    if (obstacleName != null) if (mazeObstacleUUIDs[x, y] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[x, y]).Name == obstacleName) return true;
-                        else if (mazeObstacleUUIDs[x, y] != UUID.Zero) return true;
+                    if (obstacleName != null)
+                    {if (mazeObstacleUUIDs[x, y] != UUID.Zero && ObstacleModule.GetObstacle(mazeObstacleUUIDs[x, y]).Name == obstacleName) return true;}
+                    else if (mazeObstacleUUIDs[x, y] != UUID.Zero) return true;
                 }
             }
             return false;
@@ -1143,9 +1169,8 @@ namespace MazeModule
 
             player.SetVelocity(moveVector, false);
             Vector3 rotationDirectionVector = new Vector3(dist.X == 0 ? -Math.Sign(dist.Y) : 0, dist.Y == 0 ? Math.Sign(dist.X) : 0, 0);
-            player.UpdateAngularVelocity(rotationDirectionVector * PI);
+            player.UpdateAngularVelocity(rotationDirectionVector * PI * 1.45f);
 
-            Console.WriteLine("Moving player toooooooooooooo " + target.ToString());
             string timerId = player.UUID.ToString() + "move";
             if (timerDictionary.ContainsKey(timerId))
             {
