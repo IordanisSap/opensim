@@ -3,18 +3,19 @@ command(){
     // Commands start here.
 
 
-    // move_left(1);
-    // sleep(1);
+
     move_fwd(1);
     sleep(1);
-    level_up();
-    // move_left(1);
-    // sleep(1);
+    move_right(1);
+    sleep(1);
+    // build_fwd();
+    // move_fwd(2);
+    // sleep(2);
+    //level_up();
+
     // move_fwd(2);
     // sleep(2);
     // move_back(2);
-    // sleep(2);
-    // move_left(2);
     // sleep(2);
     // level_up();
     // build_fwd();
@@ -41,6 +42,7 @@ command(){
     activate_powerup("Shield",[]);
  }
 
+
  build_fwd(){
     activate_powerup("Build",["forward"]);
  }
@@ -59,6 +61,22 @@ build_back(){
 
 level_up(){
     activate_powerup("LevelUp",[]);
+}
+
+move_fwd(integer dist){
+    movePlayer(<0,dist,0>);
+}
+
+move_back(integer dist){
+    movePlayer(<0,-dist,0>);
+}
+
+move_left(integer dist){
+    movePlayer(<-dist,0,0>);
+}
+
+move_right(integer dist){
+    movePlayer(<dist,0,0>);
 }
 
 integer powerup_num(string searchPowerup){
