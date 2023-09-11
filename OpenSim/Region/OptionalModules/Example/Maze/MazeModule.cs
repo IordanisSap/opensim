@@ -61,6 +61,7 @@ namespace MazeModule
         private UUID[,] placedPathUUIDs = null;
 
         private UUID floorUUID = UUID.Zero;
+        private UUID flagUUID = UUID.Zero;
         private Random random = new Random();
 
         private List<Player> players = new List<Player>();
@@ -705,13 +706,14 @@ namespace MazeModule
                 SceneObjectPart srcObject = getController();
                 TaskInventoryItem item = srcObject.Inventory.GetInventoryItem("Flag");
                 SceneObjectPart targetObject = m_scene.GetSceneObjectPart(objectUUID);
-                List<SceneObjectGroup> newFlag = m_scene.RezObject(srcObject, item, targetObject.AbsolutePosition + new Vector3(-objScale * 0.2f, objScale * 0.35f, objScale * 2.2f), null, Vector3.Zero, 0, false, false);
+                List<SceneObjectGroup> newFlag = m_scene.RezObject(srcObject, item, targetObject.AbsolutePosition + new Vector3(-objScale * 0.2f, objScale * 0.35f, objScale * 1.4f), null, Vector3.Zero, 0, false, false);
                 newFlag[0].ResumeScripts();
                 targetObject.ScriptAccessPin = 123;
 
                 TaskInventoryItem script = srcObject.Inventory.GetInventoryItem("Endpoint");
                 m_scene.RezScriptFromPrim(script.ItemID, srcObject, objectUUID, 123, 1, 0);
                 CleanerModule.AddItem(newFlag[0].UUID);
+                flagUUID = newFlag[0].UUID;
             }
             catch (Exception e)
             {
@@ -830,7 +832,7 @@ namespace MazeModule
                     {
                         if (map[x, y] != UUID.Zero)
                         {
-                            if (landmarkUUIDs[x, y] != UUID.Zero || mazePowerupsUUIDs[x, y] != UUID.Zero || mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 2) != 0) continue;
+                            if (landmarkUUIDs[x, y] != UUID.Zero || mazePowerupsUUIDs[x, y] != UUID.Zero || mazeObstacleUUIDs[x - 1, y] != UUID.Zero || mazeObstacleUUIDs[x, y - 1] != UUID.Zero || random.Next(0, 1) != 0) continue;
                             Obstacle randomObstacle;
                             if (ObstacleModule.GetObstacle("Bomb").PlaceConditionCallback(new int[2] { x, y })) randomObstacle = ObstacleModule.GetObstacle("Bomb");
                             else
@@ -973,7 +975,7 @@ namespace MazeModule
                 for (int x = 1; x < map.GetLength(0) - 1; x++)
                 {
                     Console.WriteLine("Obstacle in range" + obstacleInRange(new int[2] { x, y }, 2));
-                    if (map[x, y] == UUID.Zero || obstacleInRange(new int[2] { x, y }, 2) || random.Next(8) != 0 || blinkingblocksUUIDs[x,y-1] != UUID.Zero || blinkingblocksUUIDs[x-1,y] != UUID.Zero ) continue;
+                    if (map[x, y] == UUID.Zero || obstacleInRange(new int[2] { x, y }, 2) || random.Next(15) != 0 || blinkingblocksUUIDs[x, y - 1] != UUID.Zero || blinkingblocksUUIDs[x - 1, y] != UUID.Zero) continue;
 
                     blinkingblocksUUIDs[x, y] = map[x, y];
                     SceneObjectPart block = m_scene.GetSceneObjectPart(map[x, y]);
@@ -1170,6 +1172,23 @@ namespace MazeModule
             Vector3 newStartPointPos = endPointObj.AbsolutePosition + new Vector3(0, 0, objScale);
             newStartPointPos.Y = endPointObj.AbsolutePosition.Y + objScale;
             newStartPointPos.X = startPointObj.AbsolutePosition.X + START_OFFSET.X;
+            CleanerModule.DeleteObstacles();
+
+            //Delete the flag
+            SceneObjectPart flag = m_scene.GetSceneObjectPart(flagUUID);
+            if (flag == null) return 0;
+            flag.UpdateAngularVelocity(new Vector3(1.5f, 0, 0));
+            string timerId = "flagRotationTimer" + flag.UUID.ToString();
+            UUID toDelete = flag.UUID;
+            Timer flagRotationTimer = new Timer(delegate (object state)
+            {
+                SceneObjectPart fl = m_scene.GetSceneObjectPart(toDelete);
+                if (fl != null) m_scene.DeleteSceneObject(fl.ParentGroup, false);
+                timerDictionary[timerId].Dispose();
+                timerDictionary.Remove(timerId);
+            }, null, 1200, Timeout.Infinite);
+            timerDictionary.Add(timerId, flagRotationTimer);
+
             generateLevel(hostID, UUID.Zero, Convert.ToInt32(Math.Round(mazeObjUUIDs.GetLength(0) * 0.75f)), newStartPointPos);
             return 1;
 

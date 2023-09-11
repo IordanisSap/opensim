@@ -79,6 +79,24 @@ public class CleanerModule
         items.Add(item);
     }
 
+    public void DeleteObstacles()
+    {
+        for (int level = 0; level < obstacleUUIDs.Count; level++)
+        {
+            for (int y = 0; y < obstacleUUIDs[level].GetLength(1); y++)
+            {
+                for (int x = 0; x < obstacleUUIDs[level].GetLength(0); x++)
+                {
+                    if (obstacleUUIDs[level][x, y] != null)
+                    {
+                        SceneObjectGroup obj = m_scene.GetSceneObjectGroup(obstacleUUIDs[level][x, y]);
+                        if (obj != null) m_scene.DeleteSceneObject(obj, false);
+                    }
+                }
+            }
+        }
+    }
+
     public void reset()
     {
         for (int level = 0; level < pathUUIDs.Count; level++)

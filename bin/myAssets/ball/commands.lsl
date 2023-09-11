@@ -4,14 +4,18 @@ command(){
 
 
 
-    move_fwd(1);
-    sleep(1);
-    move_right(1);
-    sleep(1);
-    // build_fwd();
-    // move_fwd(2);
+    // move_fwd(10);
+    // sleep(10);
+    // move_left(6);
+    // sleep(6);
+    // move_fwd(6);
+    // sleep(6);
+
+    // move_right(2);
     // sleep(2);
-    //level_up();
+    // move_fwd(1);
+    // sleep(1);
+    level_up();
 
     // move_fwd(2);
     // sleep(2);
