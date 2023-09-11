@@ -975,7 +975,7 @@ namespace MazeModule
                 for (int x = 1; x < map.GetLength(0) - 1; x++)
                 {
                     Console.WriteLine("Obstacle in range" + obstacleInRange(new int[2] { x, y }, 2));
-                    if (map[x, y] == UUID.Zero || obstacleInRange(new int[2] { x, y }, 2) || random.Next(15) != 0 || blinkingblocksUUIDs[x, y - 1] != UUID.Zero || blinkingblocksUUIDs[x - 1, y] != UUID.Zero) continue;
+                    if (map[x, y] == UUID.Zero || obstacleInRange(new int[2] { x, y }, 3) || random.Next(15) != 0 || blinkingblocksUUIDs[x, y - 1] != UUID.Zero || blinkingblocksUUIDs[x - 1, y] != UUID.Zero) continue;
 
                     blinkingblocksUUIDs[x, y] = map[x, y];
                     SceneObjectPart block = m_scene.GetSceneObjectPart(map[x, y]);
@@ -994,17 +994,17 @@ namespace MazeModule
                         }
                         if (bl.ParentGroup.IsPhantom)
                         {
-                            bl.SetFaceColorAlpha(SceneObjectPart.ALL_SIDES, new Vector3(0.5f, 0.5f, 0), 1f);
+                            bl.SetFaceColorAlpha(SceneObjectPart.ALL_SIDES, new Vector3(0.65f, 0.5f, 0), 1f);
                             bl.ParentGroup.ScriptSetPhantomStatus(false);
                         }
                         else
                         {
-                            bl.SetFaceColorAlpha(SceneObjectPart.ALL_SIDES, new Vector3(0.5f, 0.5f, 0), 0f);
+                            bl.SetFaceColorAlpha(SceneObjectPart.ALL_SIDES, new Vector3(0.65f, 0.5f, 0), 0f);
                             block.ParentGroup.ScriptSetPhantomStatus(true);
                         }
                     }, null, random.Next(2001), 2000);
                     timerDictionary.Add(timerId, blinkingBlockTimer);
-                    block.SetFaceColorAlpha(SceneObjectPart.ALL_SIDES, new Vector3(0.5f, 0.5f, 0), 1);
+                    block.SetFaceColorAlpha(SceneObjectPart.ALL_SIDES, new Vector3(0.5f, 0.65f, 0), 1);
                 }
             }
         }
