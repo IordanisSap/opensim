@@ -24,19 +24,24 @@ using System.Linq;
 public class PowerUp
 {
     public delegate void Callback(Player player, object[] data = null);
+    
+    public delegate void PlaceCallback(object[] data);
     public Callback ActivateCallback { get; set; }
     public Callback DeactivateCallback { get; set; }
+
+    public PlaceCallback OnPlaceCallback { get; set; }
 
     public string Name { get; set; }
 
     public int Duration { get; set; }
 
-    public PowerUp(string name, int duration, Callback onActivate, Callback onDeactivate)
+    public PowerUp(string name, int duration, Callback onActivate, Callback onDeactivate, PlaceCallback onPlace = null)
     {
         this.Name = name;
         this.Duration = duration;
         this.ActivateCallback = onActivate;
         this.DeactivateCallback = onDeactivate;
+        this.OnPlaceCallback = onPlace;
     }
 
     public void Activate(Player player, object[] data)
@@ -54,6 +59,15 @@ public class PowerUp
             DeactivateCallback(player);
         }
     }
+
+    public void OnPlace(object[] data)
+    {
+        if (OnPlaceCallback != null)
+        {
+            OnPlaceCallback(data);
+        }
+    }
+
     public override bool Equals(object obj)
     {
         if (obj == null || GetType() != obj.GetType())

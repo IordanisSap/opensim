@@ -2,20 +2,74 @@
 command(){
     // Commands start here.
 
+    
 
 
-    // move_fwd(10);
-    // sleep(10);
-    // move_left(6);
-    // sleep(6);
-    // move_fwd(6);
-    // sleep(6);
+    // move_fwd(3);
+    // sleep(3); 
 
+    // move_right(4);
+    // sleep(4);
+
+    // move_fwd(2);
+    // sleep(2);
+    
     // move_right(2);
     // sleep(2);
+
+    // move_fwd(2);
+    // sleep(2);
+
+    // integer i; 
+    // for (i=0;i < 14; ++i)
+    // {
+    //     move_fwd(1);
+    //     sleep(1);
+    //     move_back(1);
+    //     sleep(1);
+    // }
+
+    // move_fwd(2);
+    // sleep(2);
+
+    // move_left(4);
+    // sleep(4);
+
+
+    // move_back(2);
+    // sleep(2);
+
+    // move_left(2);
+    // sleep(2);
+
+    // move_fwd(2);
+    // sleep(2); 
+
+
+
+
+    // move_fwd(2);
+    // sleep(2);
+    
+    // move_left(2);
+    // sleep(2);
+
     // move_fwd(1);
     // sleep(1);
+
+
+
+    // move_fwd(5);
+    // sleep(5);
+
+
+
     level_up();
+
+    // move_fwd(2);
+    // sleep(2);
+
+
 
     // move_fwd(2);
     // sleep(2);
@@ -39,7 +93,7 @@ command(){
  integer channel = -13572468;
 
  sleep(integer seconds){
-    llSleep(seconds);
+    llSleep(seconds*getTimeFactor());
  }
 
  shield(){
