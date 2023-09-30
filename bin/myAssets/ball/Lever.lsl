@@ -18,7 +18,14 @@ default
         if (colliding == TRUE) return;
         if (rotations < 14) {
             rotate();
-            llMessageLinked(get_prim("Fire"), 14 - rotations, llGetScriptName(), "");
+            string sound = llGetInventoryName(INVENTORY_SOUND, 0);
+ 
+            if (sound == "")
+            {
+                llSay(PUBLIC_CHANNEL, "Inventory sound missing ...");
+            }
+            osTriggerSound(1, sound, 1.0);
+            llMessageLinked(get_prim("Obstacle" + (string) (14-rotations)), 14-rotations, llGetScriptName(), "");
             colliding = TRUE;
         }
     }
@@ -29,7 +36,8 @@ default
 
     link_message(integer sender_num, integer num, string str, key id)
     {
-        if (sender_num == get_prim("Fire")) obstacleCollision(id);
+        // if (sender_num == get_prim("Fire")) 
+        obstacleCollision(id);
     }
 }
 
@@ -67,13 +75,16 @@ integer get_prim(string name)
 
 
 integer collision_check(vector pos){
-    integer leverLink = get_prim("FireObstacle");
+    integer leverLink = get_prim("LeverObstacle");
     vector collisionBoxPos = llList2Vector(llGetLinkPrimitiveParams(leverLink, [PRIM_POSITION]),0);
     vector collisionBoxSize = llList2Vector(llGetLinkPrimitiveParams(leverLink, [PRIM_SIZE]),0);
     vector collisionBoxMin = collisionBoxPos - collisionBoxSize * 1.2;
     vector collisionBoxMax = collisionBoxPos + collisionBoxSize * 1.2;
+    llOwnerSay(collisionBoxMin + " " + collisionBoxMax + " " + pos);
+
     if (pos.x > collisionBoxMin.x && pos.x < collisionBoxMax.x && pos.y > collisionBoxMin.y && pos.y < collisionBoxMax.y && pos.z > collisionBoxMin.z && pos.z < collisionBoxMax.z){
         return TRUE;
     }
+
     return FALSE;
 }

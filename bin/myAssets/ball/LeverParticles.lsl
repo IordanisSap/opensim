@@ -38,6 +38,9 @@ default
             PSYS_PART_END_ALPHA,
                 0.1
         ]);
+        llParticleSystem([]);
+        llSetText("", ZERO_VECTOR, 0);
+
     }
     link_message(integer sender_num, integer num, string str, key id)
     {

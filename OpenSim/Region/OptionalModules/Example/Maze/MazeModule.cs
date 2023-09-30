@@ -38,6 +38,8 @@ namespace MazeModule
         private IWorldComm m_worldComm;
 
         private IScriptModule m_scriptModule;
+
+        private ISoundModule m_soundModule;
         private UUID landOwnerUUID = UUID.Zero;
 
         private int commChannel = -5;
@@ -407,7 +409,7 @@ namespace MazeModule
 
             ObstacleModule.AddObstacle(
                 new Obstacle(
-                    "FireObstacle",
+                    "LeverObstacle",
                     delegate (Player player)
                     {
                         teleportToStart(player.getUUID());
@@ -417,6 +419,8 @@ namespace MazeModule
                         bool hasYAxisBlocks = false;
                         bool hasXAxisBlocks = false;
                         if (obstacleInRange(pos, 2)) return false;
+                        List<int[]> path = mazeSolver.getPath();
+                        if (path.FindIndex(array => array[0] == pos[0] && array[1] == pos[1]) == -1) return false;
                         if (mazeObjUUIDs[pos[0], pos[1] + 1] != UUID.Zero && mazeObjUUIDs[pos[0], pos[1] - 1] != UUID.Zero) hasYAxisBlocks = true;
                         if (mazeObjUUIDs[pos[0] + 1, pos[1]] != UUID.Zero && mazeObjUUIDs[pos[0] - 1, pos[1]] != UUID.Zero) hasXAxisBlocks = true;
                         if (hasXAxisBlocks != hasYAxisBlocks) return true;
@@ -425,15 +429,63 @@ namespace MazeModule
                     (int[] pos) =>
                     {
                         Quaternion rot = Quaternion.Identity;
-                        Vector3 offset = new Vector3(-objScale * 0.23f, -objScale * 0.22f, objScale * 0.45f);
-                        if (mazeObjUUIDs[pos[0] - 1, pos[1]] != UUID.Zero && mazeObjUUIDs[pos[0] + 1, pos[1]] != UUID.Zero)
-                        {
-                            offset.Y = mazeObjUUIDs[pos[0], pos[1] - 1] == UUID.Zero ? -objScale * 0.34f : -objScale * 0.34f;
-                            rot = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -PI / 2);
-                        }
+                        Vector3 offset = new Vector3(objScale * -0.29f, -objScale*0.1f, objScale * 0.45f);
+                        Vector3 stackOffset = new Vector3(0,0,-0.21f);
 
-                        SceneObjectPart obstInstance = m_scene.GetSceneObjectPart(mazeObstacleUUIDs[pos[0], pos[1]]);
-                        obstInstance.ParentGroup.TeleportObject(obstInstance.UUID, obstInstance.AbsolutePosition - offset, rot, 1);
+                        List<int[]> path = mazeSolver.getPath();
+                        for (int i = 0; i < path.Count; i++)
+                        {
+                            int[] pathPoint = path[i];
+                            if (pathPoint[0] == pos[0] && pathPoint[1] == pos[1])
+                            {
+                                int[] prevPoint = path[i - 1];
+                                if (path[i - 1][0] == pos[0] && path[i - 1][1] == pos[1] + 1) { //90
+                                    rot = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, PI);
+                                    offset.Y = -objScale * 0.27f;
+                                    offset.X = -objScale * 0.22f;
+                                    stackOffset.Y = -objScale - 0.32f ;
+                                    stackOffset.X = 0.07f;
+                                }
+                                else if (path[i - 1][0] == pos[0] && path[i - 1][1] == pos[1] - 1) { //270
+                                    rot = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0);
+                                    offset.Y = objScale * 0.05f;
+                                    offset.X = -objScale * 0.285f;
+                                    stackOffset.Y = objScale + 0.32f;
+                                    stackOffset.X = -0.07f;
+                                }
+                                else if (path[i - 1][0] == pos[0] + 1 && path[i - 1][1] == pos[1]) { //180
+                                    rot = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, PI / 2);
+                                    offset.Y = -objScale*0.195f;
+                                    offset.X = objScale * -0.39f;
+                                    stackOffset.X = -objScale - 0.32f;
+                                    stackOffset.Y = -0.07f;
+                                }
+                                else if (path[i - 1][0] == pos[0] - 1 && path[i - 1][1] == pos[1]) { //0
+                                    rot = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -PI / 2);
+                                    offset.Y = -objScale*0.1f;
+                                    offset.X = -objScale * 0.1f;
+                                    stackOffset.X = objScale + 0.32f;
+                                    stackOffset.Y = 0.07f;
+                                }
+                            }
+                        }
+                        SceneObjectPart leverInstance = m_scene.GetSceneObjectPart(mazeObstacleUUIDs[pos[0], pos[1]]);
+                        leverInstance.ParentGroup.TeleportObject(leverInstance.UUID, leverInstance.AbsolutePosition - offset, rot, 1);
+                        // int obstPart = leverInstance.ParentGroup.GetLinkNumber("Obstacle");
+                        // SceneObjectPart obstacleInstance = leverInstance.ParentGroup.GetLinkNumPart(obstPart);
+                        TaskInventoryItem obstItem = leverInstance.Inventory.GetInventoryItem("Obstacle");
+                        TaskInventoryItem obstItemScript = leverInstance.Inventory.GetInventoryItem("LeverObstacleScript");
+                        for (int i = 0; i < 14; i++)
+                        {
+                            if (obstItem == null) break;
+                            List<SceneObjectGroup> new_obst = m_scene.RezObject(leverInstance, obstItem, leverInstance.AbsolutePosition + stackOffset, null, Vector3.Zero, 0, false, false);
+                            new_obst[0].Name = "Obstacle" + i.ToString();
+                            new_obst[0].TeleportObject(new_obst[0].UUID, new_obst[0].AbsolutePosition + new Vector3(0, 0, new_obst[0].RootPart.Scale.Z * i), Quaternion.Identity, 1);
+                            new_obst[0].RootPart.ScriptAccessPin = 123;
+                            m_scene.RezScriptFromPrim(obstItemScript.ItemID, leverInstance, new_obst[0].RootPart.UUID, 123, 1, 0);
+                            leverInstance.ParentGroup.LinkToGroup(new_obst[0]);
+
+                        }
                         return true;
                     }
                 )
@@ -477,6 +529,7 @@ namespace MazeModule
                 m_comms = m_scene.RequestModuleInterface<IScriptModuleComms>();
                 m_scriptModule = m_scene.RequestModuleInterface<IScriptModule>();
                 m_worldComm = m_scene.RequestModuleInterface<IWorldComm>();
+                m_soundModule = m_scene.RequestModuleInterface<ISoundModule>();
                 AttachmentModule = new AttachmentModule(m_scene);
                 LandmarkModule = new LandmarkModule(m_scene);
                 CleanerModule = new CleanerModule(m_scene);
@@ -918,7 +971,7 @@ namespace MazeModule
                             if (ObstacleModule.GetObstacle("Bomb").PlaceConditionCallback(new int[2] { x, y })) randomObstacle = ObstacleModule.GetObstacle("Bomb");
                             else
                             {
-                                if (random.Next(0, 6) == 0) randomObstacle = ObstacleModule.GetRandomObstacle();
+                                if (random.Next(0, 1) == 0) randomObstacle = ObstacleModule.GetRandomObstacle();
                                 else continue;
                             }
                             SceneObjectPart controller = getController();
